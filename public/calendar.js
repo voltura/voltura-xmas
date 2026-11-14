@@ -1,4 +1,4 @@
-import { weather, musicBox, ringBell } from '/effects.js';
+import { weather, musicBox, ringBell, scheduleTomte } from '/effects.js';
 
 const $ = id => document.getElementById(id);
 const text = {
@@ -579,6 +579,7 @@ addEventListener('keydown', event => {
   if (event.key === 'Escape') hideDoorTooltip();
 });
 setupDoors();
+scheduleTomte($('tomte'));
 syncOpenedDoors();
 render();
 if (musicOn) {

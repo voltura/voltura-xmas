@@ -196,6 +196,24 @@ export function weather(canvas, background, board) {
   };
 }
 
+export function scheduleTomte(tomte) {
+  const later = (min, max) => setTimeout(walk, (min + Math.random() * (max - min)) * 1000);
+  function walk() {
+    if (document.hidden || document.querySelector('dialog[open]')) {
+      later(35, 55);
+      return;
+    }
+    tomte.style.setProperty('--tomte-duration', Math.max(12, (innerWidth + 54) / 64) + 's');
+    tomte.hidden = false;
+  }
+  tomte.addEventListener('animationend', event => {
+    if (event.animationName !== 'tomte-cross') return;
+    tomte.hidden = true;
+    later(300, 540);
+  });
+  later(75, 135);
+}
+
 // James Pierpont's Jingle Bells chorus. A quiet oscillator arrangement played on demand.
 const chorus = [
   [64,1],[64,1],[64,2],[64,1],[64,1],[64,2],[64,1],[67,1],[60,1.5],[62,.5],[64,4],
