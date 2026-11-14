@@ -43,10 +43,10 @@ a{color:inherit;text-underline-offset:4px}
 .shade{background:linear-gradient(109deg,transparent 18%,#faefde12 38%,transparent 59%);box-shadow:inset 0 0 0 1px #3c2d1f48}
 .heading{position:absolute;top:5%;left:25%;width:51%;text-align:center;color:var(--title-cream);text-shadow:0 2px 18px #101a32}
 [data-light=day] .heading{color:#142e4b;text-shadow:0 1px 4px #e7f3ff}
-.season{font-size:clamp(.55rem,1.12cqw,.92rem);font-weight:700;letter-spacing:.25em;margin:0 0 .45rem}
+.season{font-size:clamp(.55rem,1.12cqw,.92rem);font-weight:700;letter-spacing:.25em;margin:0 0 min(.45rem,.75cqw)}
 h1,h2{font-family:Georgia,serif;font-weight:normal}
 h1{font-size:clamp(1.6rem,5.3cqw,4.4rem);letter-spacing:-.053em;line-height:.93;margin:0}
-.countdown{margin:.6rem auto 0;font-size:clamp(.67rem,1.55cqw,1.2rem);font-weight:600}
+.countdown{margin:min(.6rem,1cqw) auto 0;font-size:clamp(.67rem,1.55cqw,1.2rem);font-weight:600}
 .doors{position:absolute;inset:0;pointer-events:none}
 .door{
   --left:var(--x);--top:var(--y);
@@ -146,7 +146,7 @@ body:has(dialog[open]){overflow:hidden}
   .picture{--paper-height:calc(100cqw / .84);--paper-width:calc(var(--paper-height) * 1.777);--paper-offset:calc((100cqw - var(--paper-width)) * .89);min-height:0;aspect-ratio:.84}
   .landscape,.daylight{background-size:auto 100%;background-position:89% center}
   .heading{top:4%;left:4%;width:92%}h1{font-size:clamp(1.55rem,9cqw,3.8rem)}
-  .countdown{font-size:.78rem}.season{font-size:.6rem}
+  .countdown{margin:.6rem auto 0;font-size:.78rem}.season{margin-bottom:.45rem;font-size:.6rem}
   .door{--left:var(--mx);--top:var(--my);width:14%;height:9.5%}
   .flap{font-size:clamp(1.2rem,6cqw,2rem);background-position:0 0,calc(var(--paper-offset) - var(--left) * 100cqw) calc(-1 * var(--top) * var(--paper-height))}
   .bell{left:calc(89% + (59.8 - 89) * 2.115cqw - 15px);top:57%}
