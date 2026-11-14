@@ -21,7 +21,6 @@ const text = {
     before: 'The first door opens on December 1.',
   },
 };
-const motion = matchMedia('(prefers-reduced-motion: reduce)');
 const positions = [
   [12, 34], [4, 15], [24, 50], [3, 70], [36, 33], [16, 67],
   [3, 42], [28, 74], [80, 10], [11, 85], [33, 57], [46, 46],
@@ -33,7 +32,7 @@ const doors = new Map();
 const projectImages = new Map();
 const card = $('picture');
 const reveal = $('reveal');
-const effects = weather($('weather'), $('background-snow'), card.closest('.calendar'), motion);
+const effects = weather($('weather'), $('background-snow'), card.closest('.calendar'));
 const music = musicBox();
 const read = (store, key, fallback) => {
   try { return JSON.parse(window[store].getItem(key)) ?? fallback; } catch { return fallback; }
@@ -79,9 +78,11 @@ function setupDoors() {
     const place = mobileOrder.indexOf(day);
     const door = document.createElement('div');
     door.className = 'door' + (day === 24 ? ' large' : '');
+    const mobileX = 4 + place % 6 * 15.35;
+    const mobileY = [28, 40, 70, 83][Math.floor(place / 6)] + place % 3 * 1.35;
     for (const [variable, value] of Object.entries({
-      x, y, mx: 4 + place % 6 * 15.35, my: [28, 40, 70, 83][Math.floor(place / 6)] + place % 3 * 1.35,
-    })) door.style.setProperty('--' + variable, value + '%');
+      x, y, mx: mobileX, my: mobileY,
+    })) door.style.setProperty('--' + variable, value / 100);
     const image = document.createElement('a');
     image.className = 'door-image';
     image.target = '_blank';
@@ -200,7 +201,7 @@ async function presentation(project, day) {
     $('reveal-description').hidden = false;
     $('project-link').hidden = false;
   };
-  if (!project.video || motion.matches) {
+  if (!project.video) {
     promo();
     return;
   }
@@ -249,7 +250,6 @@ async function presentation(project, day) {
 }
 
 async function waitForFlap(flap) {
-  if (motion.matches) return;
   // Flush styles so the transition is present before reading its completion.
   void getComputedStyle(flap).transform;
   await Promise.allSettled(flap.getAnimations().map(animation => animation.finished));
@@ -291,18 +291,16 @@ async function openDoor(day) {
     lastDoor = image;
     await waitForFlap(flap);
     if (day === 24) effects.fireworks();
-    if (day === 24 && !motion.matches) await new Promise(resolve => setTimeout(resolve, 1000));
+    if (day === 24) await new Promise(resolve => setTimeout(resolve, 1000));
     active = { project, day };
     const target = lastDoor.getBoundingClientRect();
     reveal.showModal();
-    if (!motion.matches) {
-      const box = reveal.getBoundingClientRect();
-      reveal.animate([
-        { opacity: .2, transform: 'translate(' + (target.left + target.width / 2 - box.left - box.width / 2) + 'px,' +
-          (target.top + target.height / 2 - box.top - box.height / 2) + 'px) scale(.12)' },
-        { opacity: 1, transform: 'none' },
-      ], { duration: 420, easing: 'cubic-bezier(.2,.75,.3,1)' });
-    }
+    const box = reveal.getBoundingClientRect();
+    reveal.animate([
+      { opacity: .2, transform: 'translate(' + (target.left + target.width / 2 - box.left - box.width / 2) + 'px,' +
+        (target.top + target.height / 2 - box.top - box.height / 2) + 'px) scale(.12)' },
+      { opacity: 1, transform: 'none' },
+    ], { duration: 420, easing: 'cubic-bezier(.2,.75,.3,1)' });
     void presentation(project, day);
     $('close').focus();
   } catch {

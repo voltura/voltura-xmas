@@ -1,4 +1,4 @@
-export function weather(canvas, background, board, reducedMotion) {
+export function weather(canvas, background, board) {
   const context = canvas.getContext('2d');
   const snow = background.getContext('2d');
   if (!context || !snow) return { spark() {}, fireworks() {} };
@@ -103,7 +103,7 @@ export function weather(canvas, background, board, reducedMotion) {
     previous = time;
     context.clearRect(0, 0, width, height);
     snow.clearRect(0, 0, snowWidth, snowHeight);
-    if (!document.hidden && !reducedMotion.matches) {
+    if (!document.hidden) {
       const cover = matchMedia('(max-width:700px)').matches ? Math.max(width, height * 1.777) : width;
       const offset = (width - cover) * .89;
       function mapX(x) { return x * cover + offset; }
@@ -114,7 +114,6 @@ export function weather(canvas, background, board, reducedMotion) {
         const strength = Math.pow(Math.max(0, Math.sin(time * (1.05 + i * .026) + i * 3.7)), 5);
         if (strength > .1) glint(mapX(x), y * height, Math.max(4, Math.min(8, width * .006)) * (i % 3 === 0 ? 1.25 : 1), strength);
       }
-      drawSnow(dt, time);
       for (let i = sparks.length - 1; i >= 0; i--) {
         const p = sparks[i];
         p.age += dt;
@@ -123,11 +122,11 @@ export function weather(canvas, background, board, reducedMotion) {
         glow(p.x + p.dx * p.age, p.y + p.dy * p.age + 35 * p.age ** 2, 2 + 3 * fade, p.color, fade);
       }
     }
+    if (!document.hidden) drawSnow(dt, time);
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
   function burst(x, y, color, count, velocity) {
-    if (reducedMotion.matches) return;
     for (let i = 0; i < count; i++) {
       const angle = i * 2 * Math.PI / count;
       const speed = velocity * (.42 + Math.random() * .58);
