@@ -503,9 +503,10 @@ $('light').addEventListener('click', () => {
   render();
 });
 const startRequestedMusic = event => {
-  if (!musicOn || event.target.closest?.('#music')) return;
-  removeMusicStartListeners();
-  void music.resume();
+  if (!musicOn || !event.isTrusted || event.key === 'Escape' || event.target.closest?.('#music')) return;
+  void music.resume().then(playing => {
+    if (playing) removeMusicStartListeners();
+  });
 };
 function removeMusicStartListeners() {
   document.removeEventListener('click', startRequestedMusic, true);
