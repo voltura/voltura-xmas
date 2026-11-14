@@ -104,14 +104,17 @@ export function weather(canvas, background, board) {
     context.fillStyle = radial;
     context.fillRect(x - radius, y - radius, radius * 2, radius * 2);
   }
-  function twinkleBulb(x, y, color, index, time, cover) {
-    const cycle = 7 + index % 4 * 1.3;
-    const pulse = .5 + .5 * Math.sin(time * 2 * Math.PI / cycle + index * 2.39);
+  function twinkleTree(mapX, cover, time) {
+    const interval = 1.4;
+    const slot = Math.floor(time / interval);
+    const progress = (time - slot * interval) / .65;
+    if (progress >= 1) return;
+    // Step through the bulbs out of order, leaving a pause between brief twinkles.
+    const [x, y, color] = bulbs[(slot * 7) % bulbs.length];
+    const pulse = Math.sin(Math.PI * progress);
     const radius = Math.max(1.7, cover * .0028);
-    // The painted lights already glow. Dim just the core slightly to make the cycle visible.
-    glow(x, y, radius * 1.25, '18,26,32', .38 * (1 - pulse));
-    glow(x, y, radius * 2, color, .10 + .37 * pulse);
-    glow(x, y, radius, '255,248,221', .15 + .75 * pulse);
+    glow(mapX(x), y * height, radius * 2, color, .48 * pulse);
+    glow(mapX(x), y * height, radius, '255,248,221', .92 * pulse);
   }
   function chimneySmoke(x, y, scale, time, daylight) {
     const color = daylight ? '247,238,220' : '201,217,239';
@@ -152,9 +155,7 @@ export function weather(canvas, background, board) {
       const offset = (width - cover) * .89;
       function mapX(x) { return x * cover + offset; }
       chimneySmoke(mapX(.652), height * .327, Math.min(cover, height * 1.777), time, document.documentElement.dataset.light === 'day');
-      for (const [i, [x, y, color]] of bulbs.entries()) {
-        twinkleBulb(mapX(x), y * height, color, i, time, cover);
-      }
+      twinkleTree(mapX, cover, time);
       for (const [i, [x, y]] of snowGlints.entries()) {
         const strength = Math.pow(Math.max(0, Math.sin(time * (1.05 + i * .026) + i * 3.7)), 5);
         if (strength > .1) glint(mapX(x), y * height, Math.max(4, Math.min(8, width * .006)) * (i % 3 === 0 ? 1.25 : 1), strength);
