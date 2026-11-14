@@ -107,9 +107,11 @@ export function weather(canvas, background, board) {
   function twinkleBulb(x, y, color, index, time, cover) {
     const cycle = 7 + index % 4 * 1.3;
     const pulse = .5 + .5 * Math.sin(time * 2 * Math.PI / cycle + index * 2.39);
-    const radius = Math.max(1.7, cover * .0026);
-    glow(x, y, radius * 2, color, .10 + .27 * pulse);
-    glow(x, y, radius, '255,248,221', .07 + .34 * pulse);
+    const radius = Math.max(1.7, cover * .0028);
+    // The painted lights already glow. Dim just the core slightly to make the cycle visible.
+    glow(x, y, radius * 1.25, '18,26,32', .38 * (1 - pulse));
+    glow(x, y, radius * 2, color, .10 + .37 * pulse);
+    glow(x, y, radius, '255,248,221', .15 + .75 * pulse);
   }
   function chimneySmoke(x, y, scale, time, daylight) {
     const color = daylight ? '247,238,220' : '201,217,239';
