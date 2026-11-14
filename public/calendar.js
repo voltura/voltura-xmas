@@ -33,7 +33,7 @@ const doors = new Map();
 const projectImages = new Map();
 const card = $('picture');
 const reveal = $('reveal');
-const effects = weather($('weather'), $('background-snow'), motion);
+const effects = weather($('weather'), $('background-snow'), card.closest('.calendar'), motion);
 const music = musicBox();
 const read = (store, key, fallback) => {
   try { return JSON.parse(window[store].getItem(key)) ?? fallback; } catch { return fallback; }

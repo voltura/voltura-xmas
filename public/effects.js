@@ -1,10 +1,13 @@
-export function weather(canvas, background, reducedMotion) {
+export function weather(canvas, background, board, reducedMotion) {
   const context = canvas.getContext('2d');
   const snow = background.getContext('2d');
   if (!context || !snow) return { spark() {}, fireworks() {} };
-  const flakes = Array.from({ length: 106 }, () => ({
-    x: Math.random(), y: Math.random(), speed: .01 + Math.random() * .034,
-    radius: .4 + Math.random() * 1.6, phase: Math.random() * 6, alpha: .23 + Math.random() * .65,
+  const snowBands = [18, 18, 27, 30].map(count => ({
+    x: 0, y: 0, width: 0, height: 0,
+    flakes: Array.from({ length: count }, () => ({
+      x: Math.random(), y: Math.random(), speed: 13 + Math.random() * 22,
+      radius: .8 + Math.random() * 1.7, phase: Math.random() * 6, alpha: .36 + Math.random() * .48,
+    })),
   }));
   const bulbs = [
     [.861, .491, '255,78,44'], [.85, .532, '80,164,255'], [.886, .531, '53,243,146'],
@@ -25,7 +28,53 @@ export function weather(canvas, background, reducedMotion) {
     return [rect.width, rect.height];
   }
   new ResizeObserver(() => { [width, height] = size(canvas, context); }).observe(canvas);
-  new ResizeObserver(() => { [snowWidth, snowHeight] = size(background, snow); }).observe(background);
+  function positionSnow() {
+    const bounds = board.getBoundingClientRect();
+    const left = Math.max(0, bounds.left);
+    const right = Math.min(snowWidth, bounds.right);
+    const top = Math.max(0, Math.min(snowHeight, bounds.top));
+    const bottom = Math.max(top, Math.min(snowHeight, bounds.bottom));
+    const areas = [
+      [0, top, left, bottom - top],
+      [right, top, snowWidth - right, bottom - top],
+      [0, 0, snowWidth, top],
+      [0, bottom, snowWidth, snowHeight - bottom],
+    ];
+    areas.forEach(([x, y, width, height], index) => Object.assign(snowBands[index], { x, y, width, height }));
+  }
+  const snowResize = new ResizeObserver(() => {
+    [snowWidth, snowHeight] = size(background, snow);
+    positionSnow();
+  });
+  snowResize.observe(background);
+  snowResize.observe(board);
+  addEventListener('scroll', positionSnow, { passive: true });
+
+  function drawSnow(dt, time) {
+    const daylight = document.documentElement.dataset.light === 'day';
+    for (const { x, y, width, height, flakes } of snowBands) {
+      if (width < 4 || height < 12) continue;
+      const count = Math.min(flakes.length, Math.max(3, Math.round(width * height / 2300)));
+      for (let i = 0; i < count; i++) {
+        const flake = flakes[i];
+        flake.y = (flake.y + flake.speed * dt / height) % 1;
+        const sway = Math.sin(time * .8 + flake.phase) * Math.min(.13, 14 / width);
+        const px = x + ((flake.x + sway + 1) % 1) * width;
+        const py = y + flake.y * height;
+        snow.globalAlpha = flake.alpha;
+        snow.fillStyle = '#fffbef';
+        snow.beginPath();
+        snow.arc(px, py, flake.radius, 0, Math.PI * 2);
+        snow.fill();
+        if (daylight) {
+          snow.strokeStyle = '#55718c';
+          snow.lineWidth = .85;
+          snow.stroke();
+        }
+      }
+    }
+    snow.globalAlpha = 1;
+  }
   function glow(x, y, radius, color, alpha) {
     const radial = context.createRadialGradient(x, y, 0, x, y, radius);
     radial.addColorStop(0, 'rgba(' + color + ',' + alpha + ')');
@@ -65,14 +114,7 @@ export function weather(canvas, background, reducedMotion) {
         const strength = Math.pow(Math.max(0, Math.sin(time * (1.05 + i * .026) + i * 3.7)), 5);
         if (strength > .1) glint(mapX(x), y * height, Math.max(4, Math.min(8, width * .006)) * (i % 3 === 0 ? 1.25 : 1), strength);
       }
-      for (const f of flakes) {
-        f.y = (f.y + f.speed * dt) % 1;
-        f.x = (f.x + (Math.sin(time * .7 + f.phase) * .008 + .005) * dt + 1) % 1;
-        snow.fillStyle = 'rgba(255,251,237,' + f.alpha + ')';
-        snow.beginPath();
-        snow.arc(f.x * snowWidth, f.y * snowHeight, f.radius, 0, Math.PI * 2);
-        snow.fill();
-      }
+      drawSnow(dt, time);
       for (let i = sparks.length - 1; i >= 0; i--) {
         const p = sparks[i];
         p.age += dt;
