@@ -101,13 +101,11 @@ export function weather(canvas, background, board) {
     context.fillRect(x - radius, y - radius, radius * 2, radius * 2);
   }
   function twinkleBulb(x, y, color, index, time, cover) {
-    const pulse = (.5 + .5 * Math.sin(time * (2.35 + index % 4 * .37) + index * 2.39)) ** 2.5;
-    const radius = Math.max(3, cover * .0053);
-    // The bulbs are printed in the artwork. Shade the painted core as the halo fades.
-    glow(x, y, radius * 1.8, '19,25,31', .89 * (1 - pulse));
-    glow(x, y, radius * 3.7, color, .94 * pulse);
-    glow(x, y, radius * 1.1, '255,248,221', .98 * pulse);
-    if (pulse > .84) glint(x, y, radius * 1.29, (pulse - .84) / .16 * .88);
+    const cycle = 7 + index % 4 * 1.3;
+    const pulse = .5 + .5 * Math.sin(time * 2 * Math.PI / cycle + index * 2.39);
+    const radius = Math.max(1.7, cover * .0026);
+    glow(x, y, radius * 2, color, .10 + .27 * pulse);
+    glow(x, y, radius, '255,248,221', .07 + .34 * pulse);
   }
   function chimneySmoke(x, y, scale, time, daylight) {
     const color = daylight ? '247,238,220' : '201,217,239';
