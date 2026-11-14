@@ -26,26 +26,6 @@ test('share crawlers receive localized metadata and a public card', async () => 
   assert.equal(icon.headers.get('Content-Type'), 'image/x-icon');
 });
 
-test('the piano recording supports browser media byte ranges', async () => {
-  const handler = createHandler();
-  const url = origin + '/assets/jingle-bells-piano.mp3';
-  const recording = await handler(new Request(url, { method: 'HEAD' }), env);
-  assert.equal(recording.status, 200);
-  assert.equal(recording.headers.get('Content-Type'), 'audio/mpeg');
-  assert.equal(recording.headers.get('Accept-Ranges'), 'bytes');
-  const length = Number(recording.headers.get('Content-Length'));
-  const first = await handler(new Request(url, { headers: { Range: 'bytes=0-1' } }), env);
-  assert.equal(first.status, 206);
-  assert.equal(first.headers.get('Content-Range'), 'bytes 0-1/' + length);
-  assert.equal((await first.arrayBuffer()).byteLength, 2);
-  const end = await handler(new Request(url, { headers: { Range: 'bytes=-2' } }), env);
-  assert.equal(end.status, 206);
-  assert.equal(end.headers.get('Content-Range'), 'bytes ' + (length - 2) + '-' + (length - 1) + '/' + length);
-  const outside = await handler(new Request(url, { headers: { Range: 'bytes=' + length + '-' } }), env);
-  assert.equal(outside.status, 416);
-  assert.equal(outside.headers.get('Content-Range'), 'bytes */' + length);
-});
-
 test('availability follows Stockholm midnight through Christmas Eve', () => {
   const available = iso => calendarDate(at(iso)).available;
   assert.equal(available('2026-11-30T22:59:59Z'), 0);

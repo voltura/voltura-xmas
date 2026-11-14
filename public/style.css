@@ -103,7 +103,6 @@ footer{justify-content:center;flex-wrap:wrap;gap:.65rem clamp(1.15rem,3vw,1.9rem
 footer :is(a,.share-footer){text-decoration:underline;text-decoration-thickness:1px;text-decoration-color:color-mix(in srgb,currentColor 48%,transparent);text-underline-offset:4px}
 footer :is(a,.share-footer):is(:hover,:focus-visible){color:var(--ink);text-decoration-color:currentColor}
 footer :is(a,.share-footer):focus-visible{outline-color:var(--gold);border-radius:2px}
-.music-credit{flex-basis:100%;margin:0;text-align:center;font-size:.72rem}
 dialog{width:min(92vw,590px);max-height:92dvh;border:1px solid #f6ddac;border-radius:14px;padding:0;background:#f3e4ca;color:var(--text);box-shadow:0 22px 80px #090d18a9}
 dialog::backdrop{background:#070e1dc9;backdrop-filter:blur(5px)}
 .reveal-inner{padding:1.6rem clamp(1rem,5vw,2.5rem) 2rem}
@@ -150,4 +149,10 @@ body:has(dialog[open]){overflow:hidden}
   .door{--left:var(--mx);--top:var(--my);width:14%;height:9.5%}
   .flap{font-size:clamp(1.2rem,6cqw,2rem);background-position:0 0,calc(var(--paper-offset) - var(--left) * 100cqw) calc(-1 * var(--top) * var(--paper-height))}
   .bell{left:calc(89% + (59.8 - 89) * 2.115cqw - 15px);top:57%}
+}
+@media(max-width:360px){
+  .controls{gap:.23rem}
+  .controls button{padding-inline:.38rem}
+  .controls .share-button{width:34px;padding:0}
+  .brand img{width:66px}
 }

@@ -14,4 +14,4 @@ Project start years use the earliest documented work. WeekNumber, HardTop, and E
 
 The software is [MIT licensed](LICENSE). Instrument Sans is distributed under its [font license](public/assets/instrument-sans-OFL.txt).
 
-Music is [JingleBells_Piano.wav by jess_pfohl](https://freesound.org/people/jess_pfohl/sounds/219327/), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The calendar uses an excerpt edited for looping and encoded as MP3.
+The music toggle plays [Xmas Radio from the Voltura Music catalogue](https://music.voltura.se/?station=orb-se-xmas).

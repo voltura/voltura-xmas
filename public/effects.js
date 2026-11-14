@@ -239,22 +239,44 @@ export async function ringBell() {
   }
 }
 
-export function musicBox() {
+// The source for orb-se-xmas in Voltura Music's station catalogue.
+const christmasStream = 'https://azura.linkodev.ch/listen/xmas/radio.mp3';
+
+export function christmasRadio(onUnavailable) {
   let audio;
+  function suspend() {
+    if (!audio) return;
+    const previous = audio;
+    audio = null;
+    previous.pause();
+    previous.removeAttribute('src');
+    previous.load();
+  }
+  function fail(session) {
+    if (audio !== session) return;
+    suspend();
+    onUnavailable();
+  }
   return {
     async resume() {
       if (!audio) {
-        audio = new Audio('/assets/jingle-bells-piano.mp3');
-        audio.loop = true;
+        const session = new Audio();
+        audio = session;
         audio.volume = .52;
+        audio.preload = 'none';
+        audio.addEventListener('error', () => fail(session), { once: true });
+        audio.addEventListener('ended', () => fail(session), { once: true });
+        audio.src = christmasStream;
       }
+      const session = audio;
       try {
-        await audio.play();
-        return true;
-      } catch { return false; }
+        await session.play();
+        return audio === session;
+      } catch (error) {
+        if (error.name !== 'NotAllowedError') fail(session);
+        return false;
+      }
     },
-    suspend() {
-      audio?.pause();
-    },
+    suspend,
   };
 }

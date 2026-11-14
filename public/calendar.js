@@ -1,9 +1,10 @@
-import { weather, musicBox, ringBell, scheduleTomte } from '/effects.js';
+import { weather, christmasRadio, ringBell, scheduleTomte } from '/effects.js';
 
 const $ = id => document.getElementById(id);
 const text = {
   sv: {
-    title: 'Julkalender', month: 'december', night: 'Natt', day: 'Dag', music: 'Musik', off: 'Musik av',
+    title: 'Julkalender', month: 'december', night: 'Natt', day: 'Dag', music: 'Musik på', off: 'Musik av',
+    radioError: 'Julradion går inte att spela just nu. Försök igen.',
     countdown: n => n === 0 ? 'God jul!' : n === 1 ? '1 dag kvar till julafton' : n + ' dagar kvar till julafton',
     door: n => 'Lucka ' + n, locked: n => 'Öppnas ' + n + ' december', ready: 'Redo att öppnas', shut: n => 'Stäng lucka ' + n,
     opensIn: n => n === 1 ? 'Öppnas i morgon' : 'Öppnas om ' + n + ' dagar',
@@ -16,7 +17,8 @@ const text = {
     copied: 'Länken kopierades.', copyHelp: 'Markera och kopiera länken ovan.', email: 'E-post',
   },
   en: {
-    title: 'Christmas Calendar', month: 'December', night: 'Night', day: 'Day', music: 'Music', off: 'Music off',
+    title: 'Christmas Calendar', month: 'December', night: 'Night', day: 'Day', music: 'Music on', off: 'Music off',
+    radioError: 'Xmas radio is unavailable right now. Try again.',
     countdown: n => n === 0 ? 'Merry Christmas!' : n === 1 ? '1 day until Christmas Eve' : n + ' days until Christmas Eve',
     door: n => 'Door ' + n, locked: n => 'Opens December ' + n, ready: 'Ready to open', shut: n => 'Close door ' + n,
     opensIn: n => n === 1 ? 'Opens tomorrow' : 'Opens in ' + n + ' days',
@@ -43,7 +45,13 @@ const card = $('picture');
 const reveal = $('reveal');
 const doorTooltip = $('door-tooltip');
 const effects = weather($('weather'), $('background-snow'), card.closest('.calendar'));
-const music = musicBox();
+const music = christmasRadio(() => {
+  musicOn = false;
+  removeMusicStartListeners();
+  updateOption('music', 'off');
+  feedback = 'radioError';
+  render();
+});
 const read = (store, key, fallback) => {
   try { return JSON.parse(window[store].getItem(key)) ?? fallback; } catch { return fallback; }
 };
@@ -132,10 +140,10 @@ function hideDoorTooltip(anchor = tooltipAnchor) {
   doorTooltip.hidden = true;
 }
 
-function showDoorTooltip(anchor, label) {
+function showDoorTooltip(anchor, label, placement = anchor) {
   if (!label || anchor.hidden || reveal.open) return;
   hideDoorTooltip();
-  const target = anchor.getBoundingClientRect();
+  const target = placement.getBoundingClientRect();
   doorTooltip.textContent = label;
   doorTooltip.hidden = false;
   const { width, height } = doorTooltip.getBoundingClientRect();
@@ -194,6 +202,16 @@ function setupDoors() {
     const flap = document.createElement('span');
     flap.className = 'flap';
     button.append(flap);
+    function showCloseTooltip() {
+      if (door.classList.contains('open')) showDoorTooltip(button, t().shut(day), flap);
+    }
+    button.addEventListener('focus', showCloseTooltip);
+    flap.addEventListener('pointerenter', event => {
+      if (event.pointerType !== 'touch') showCloseTooltip();
+    });
+    flap.addEventListener('pointerleave', () => {
+      if (document.activeElement !== button && door.classList.contains('open')) hideDoorTooltip(button);
+    });
     button.addEventListener('click', () => {
       if (isOpen(day)) void closeDoor(day);
       else void openDoor(day);
@@ -224,7 +242,6 @@ function render() {
   $('light-label').textContent = light === 'day' ? word.day : word.night;
   $('music').setAttribute('aria-pressed', String(musicOn));
   $('music-label').textContent = musicOn ? word.music : word.off;
-  $('music-credit').hidden = !musicOn;
   $('lang').textContent = language === 'sv' ? 'EN' : 'SV';
   $('lang').setAttribute('lang', language === 'sv' ? 'en' : 'sv');
   $('lang').setAttribute('aria-label', word.switchLanguage);
@@ -249,7 +266,10 @@ function render() {
     const project = projectImages.get(day);
     const visible = isOpen(day) && project;
     door.classList.toggle('available', available);
-    if (available) hideDoorTooltip(button);
+    if (tooltipAnchor === button) {
+      const label = visible ? word.shut(day) : available ? '' : waitLabel(day);
+      if (doorTooltip.textContent !== label) hideDoorTooltip(button);
+    }
     if (!door.classList.contains('closing')) door.classList.toggle('open', Boolean(visible));
     button.setAttribute('aria-label', visible ? word.shut(day) : word.door(day) + ', ' + (available ? word.ready : word.locked(day)));
     if (flap.dataset.status !== String(available)) {
@@ -369,13 +389,11 @@ async function presentation(project, day) {
   $('reveal-description').hidden = true;
   $('project-link').hidden = true;
   media.replaceChildren(video);
-  music.suspend();
   const timeout = setTimeout(promo, 11_000);
   stopClip = () => {
     clearTimeout(timeout);
     video.pause();
     if (videoUrl.startsWith('blob:')) URL.revokeObjectURL(videoUrl);
-    if (musicOn) void music.resume();
     stopClip = () => {};
   };
   video.play().catch(() => { if (video.isConnected) promo(); });
@@ -391,6 +409,7 @@ async function closeDoor(day) {
   if (busy || ringing || !isOpen(day)) return;
   busy = true;
   const { door, flap, button, image } = doors.get(day);
+  hideDoorTooltip(button);
   hideDoorTooltip(image);
   door.classList.add('closing');
   door.classList.remove('open');
@@ -515,6 +534,7 @@ function removeMusicStartListeners() {
 }
 $('music').addEventListener('click', () => {
   removeMusicStartListeners();
+  if (feedback === 'radioError') feedback = '';
   musicOn = !musicOn;
   if (musicOn) void music.resume();
   else music.suspend();
