@@ -178,6 +178,31 @@ const chorus = [
   [65,1],[65,1],[65,1.5],[65,.5],[65,1],[64,1],[64,1],[64,.5],[64,.5],[67,1],[67,1],[65,1],[62,1],[60,4],
 ];
 
+let bellAudio;
+export async function ringBell() {
+  try {
+    bellAudio ??= new AudioContext();
+    await bellAudio.resume();
+    const start = bellAudio.currentTime + .015;
+    for (const strike of [0, .14]) {
+      for (const [frequency, level, decay] of [[820, .12, .59], [1298, .042, .4], [1956, .028, .28], [2710, .017, .16]]) {
+        const time = start + strike;
+        const tone = bellAudio.createOscillator();
+        const envelope = bellAudio.createGain();
+        tone.frequency.value = frequency;
+        envelope.gain.setValueAtTime(.0001, time);
+        envelope.gain.exponentialRampToValueAtTime(level * (strike ? .54 : 1), time + .006);
+        envelope.gain.exponentialRampToValueAtTime(.0001, time + decay);
+        tone.connect(envelope).connect(bellAudio.destination);
+        tone.start(time);
+        tone.stop(time + decay);
+      }
+    }
+  } catch {
+    // The bell still works when audio is unavailable.
+  }
+}
+
 export function musicBox() {
   let audio, timer, index = 0, next = 0, generation = 0;
   function note(pitch, time) {

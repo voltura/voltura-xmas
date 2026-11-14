@@ -1,4 +1,4 @@
-import { weather, musicBox } from '/effects.js';
+import { weather, musicBox, ringBell } from '/effects.js';
 
 const $ = id => document.getElementById(id);
 const text = {
@@ -7,6 +7,7 @@ const text = {
     countdown: n => n === 0 ? 'God jul!' : n === 1 ? '1 dag kvar till julafton' : n + ' dagar kvar till julafton',
     door: n => 'Lucka ' + n, locked: n => 'Öppnas ' + n + ' december', ready: 'Redo att öppnas', shut: n => 'Stäng lucka ' + n,
     bell: 'Julbjällra', found: 'Du hittade den hemliga julbjällran! Nu kan du öppna alla 24 luckor.',
+    relocked: 'Kommande luckor är stängda och låsta igen.',
     error: 'Det gick inte att öppna just nu. Försök igen.', close: 'Stäng', skip: 'Hoppa över',
     visit: 'Besök projektet', settings: 'Inställningar', switchLanguage: 'Switch to English', merry: 'God jul!',
     before: 'Första luckan öppnas den 1 december.',
@@ -16,6 +17,7 @@ const text = {
     countdown: n => n === 0 ? 'Merry Christmas!' : n === 1 ? '1 day until Christmas Eve' : n + ' days until Christmas Eve',
     door: n => 'Door ' + n, locked: n => 'Opens December ' + n, ready: 'Ready to open', shut: n => 'Close door ' + n,
     bell: 'Christmas bell', found: 'You found the hidden Christmas bell! All 24 doors are now yours to open.',
+    relocked: 'Future doors are closed and locked again.',
     error: 'That could not be opened right now. Try again.', close: 'Close', skip: 'Skip',
     visit: 'Visit project', settings: 'Settings', switchLanguage: 'Byt till svenska', merry: 'Merry Christmas!',
     before: 'The first door opens on December 1.',
@@ -155,6 +157,7 @@ function render() {
   $('lang').setAttribute('lang', language === 'sv' ? 'en' : 'sv');
   $('lang').setAttribute('aria-label', word.switchLanguage);
   $('bell').setAttribute('aria-label', word.bell);
+  $('bell').setAttribute('aria-pressed', String(state.unlocked));
   $('close').setAttribute('aria-label', word.close);
   $('cv').href = language === 'sv' ? 'https://voltura.se/?lang=sv' : 'https://voltura.se/';
   document.querySelector('.controls').setAttribute('aria-label', word.settings);
@@ -198,9 +201,12 @@ async function loadProject(day) {
 
 async function refresh() {
   try {
+    const requestedToken = token;
     const response = await fetch('/api/calendar', { headers: auth() });
     if (!response.ok) throw new Error('Calendar unavailable');
-    state = await response.json();
+    const updated = await response.json();
+    if (requestedToken !== token) return;
+    state = updated;
     if (token && !state.unlocked) {
       token = '';
       save(session, key + 'bell', '');
@@ -289,7 +295,7 @@ async function waitForFlap(flap) {
 }
 
 async function closeDoor(day) {
-  if (busy || !isOpen(day)) return;
+  if (busy || ringing || !isOpen(day)) return;
   busy = true;
   const { door, flap, button, image } = doors.get(day);
   hideDoorTooltip(image);
@@ -307,7 +313,7 @@ async function closeDoor(day) {
 }
 
 async function openDoor(day) {
-  if (busy || isOpen(day)) return;
+  if (busy || ringing || isOpen(day)) return;
   if (!isAvailable(day)) {
     feedback = day;
     render();
@@ -347,22 +353,44 @@ async function openDoor(day) {
 }
 
 $('bell').addEventListener('click', async () => {
-  if (ringing) return;
+  if (ringing || busy) return;
   ringing = true;
+  void ringBell();
+  $('bell').classList.remove('ringing');
+  void $('bell').offsetWidth;
+  $('bell').classList.add('ringing');
+  const bell = $('bell').getBoundingClientRect();
+  const board = card.getBoundingClientRect();
+  effects.spark((bell.left + bell.width / 2 - board.left) / board.width, (bell.top + bell.height / 2 - board.top) / board.height);
   try {
-    const response = await fetch('/api/bell', { method: 'POST' });
-    if (!response.ok) throw new Error('Bell unavailable');
-    token = (await response.json()).token;
-    save(session, key + 'bell', token);
-    state.unlocked = true;
-    feedback = 'found';
-    $('bell').classList.remove('ringing');
-    void $('bell').offsetWidth;
-    $('bell').classList.add('ringing');
-    const bell = $('bell').getBoundingClientRect();
-    const board = card.getBoundingClientRect();
-    effects.spark((bell.left + bell.width / 2 - board.left) / board.width, (bell.top + bell.height / 2 - board.top) / board.height);
-    render();
+    if (state.unlocked) {
+      const closing = [...doors].filter(([day, entry]) => day > state.available && entry.door.classList.contains('open'));
+      for (const [, { door, image }] of closing) {
+        hideDoorTooltip(image);
+        door.classList.add('closing');
+        door.classList.remove('open');
+      }
+      for (const day of early) if (day <= state.available) opened.add(day);
+      early.clear();
+      token = '';
+      state.unlocked = false;
+      save(local, key + 'opened', [...opened]);
+      save(session, key + 'early', []);
+      save(session, key + 'bell', '');
+      feedback = 'relocked';
+      render();
+      await Promise.all(closing.map(([, { flap }]) => waitForFlap(flap)));
+      for (const [, { door }] of closing) door.classList.remove('closing');
+      render();
+    } else {
+      const response = await fetch('/api/bell', { method: 'POST' });
+      if (!response.ok) throw new Error('Bell unavailable');
+      token = (await response.json()).token;
+      save(session, key + 'bell', token);
+      state.unlocked = true;
+      feedback = 'found';
+      render();
+    }
   } catch {
     feedback = 'error';
     render();
