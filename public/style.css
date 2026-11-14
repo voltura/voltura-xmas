@@ -3,7 +3,7 @@
 html,body,dialog{-webkit-user-select:none;user-select:none}
 *,*::before,*::after{box-sizing:border-box}
 [hidden]{display:none!important}
-body{--book-cloth:url('/assets/book-cloth-night.jpg');margin:0;min-height:100vh;isolation:isolate;background:var(--book-cloth) 0 0/1120px 1120px repeat,var(--shell)}
+body{margin:0;min-height:100vh;isolation:isolate;background:radial-gradient(ellipse at 50% 16%,#253958,transparent 72%),var(--shell)}
 #background-snow{position:fixed;inset:0;z-index:0;width:100%;height:100%;pointer-events:none}
 #tomte-track{position:fixed;inset:auto 0 0;z-index:2;height:80px;overflow:hidden;pointer-events:none}
 #tomte{position:absolute;left:100%;bottom:6px;width:clamp(42px,5vw,54px);aspect-ratio:3/4;animation:tomte-cross var(--tomte-duration) linear both}
@@ -12,7 +12,7 @@ body{--book-cloth:url('/assets/book-cloth-night.jpg');margin:0;min-height:100vh;
 @keyframes tomte-steps{to{background-position-x:133.333333%}}
 .site-header,main,footer{position:relative;z-index:1}
 html[data-light=day]{color-scheme:light;--shell:#e5e9ee;--ink:#23374b;--soft:#394e61;--line:#54708452;--gold:#78431b}
-[data-light=day] body{--book-cloth:url('/assets/book-cloth-day.jpg')}
+[data-light=day] body{background:radial-gradient(ellipse at 50% 16%,#fff8e9,transparent 72%),var(--shell)}
 button,a{-webkit-tap-highlight-color:transparent}
 button{font:inherit;cursor:pointer;color:inherit}
 a{color:inherit;text-underline-offset:4px}
