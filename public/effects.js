@@ -2,11 +2,12 @@ export function weather(canvas, background, board) {
   const context = canvas.getContext('2d');
   const snow = background.getContext('2d');
   if (!context || !snow) return { spark() {}, fireworks() {} };
-  const snowBands = [18, 18, 27, 30].map(count => ({
+  const snowBands = [25, 25, 34, 37].map(count => ({
     x: 0, y: 0, width: 0, height: 0,
     flakes: Array.from({ length: count }, () => ({
-      x: Math.random(), y: Math.random(), speed: 13 + Math.random() * 22,
-      radius: .8 + Math.random() * 1.7, phase: Math.random() * 6, alpha: .36 + Math.random() * .48,
+      x: Math.random(), y: Math.random(), speed: 10 + Math.random() * 23,
+      radius: 1.1 + Math.random() ** 1.6 * 4.3, phase: Math.random() * 6,
+      spin: (Math.random() - .5) * .46, tone: Math.random(), alpha: .46 + Math.random() * .42,
     })),
   }));
   const bulbs = [
@@ -50,11 +51,32 @@ export function weather(canvas, background, board) {
   snowResize.observe(board);
   addEventListener('scroll', positionSnow, { passive: true });
 
+  function snowCrystal(x, y, radius, angle) {
+    snow.beginPath();
+    for (let arm = 0; arm < 6; arm++) {
+      const bearing = angle + arm * Math.PI / 3;
+      const dx = Math.cos(bearing);
+      const dy = Math.sin(bearing);
+      snow.moveTo(x, y);
+      snow.lineTo(x + dx * radius, y + dy * radius);
+      if (radius >= 3) {
+        const branchX = x + dx * radius * .62;
+        const branchY = y + dy * radius * .62;
+        for (const side of [-1, 1]) {
+          snow.moveTo(branchX, branchY);
+          snow.lineTo(branchX + (dx * .18 - dy * side * .24) * radius,
+            branchY + (dy * .18 + dx * side * .24) * radius);
+        }
+      }
+    }
+    snow.stroke();
+  }
+
   function drawSnow(dt, time) {
     const daylight = document.documentElement.dataset.light === 'day';
     for (const { x, y, width, height, flakes } of snowBands) {
       if (width < 4 || height < 12) continue;
-      const count = Math.min(flakes.length, Math.max(3, Math.round(width * height / 2300)));
+      const count = Math.min(flakes.length, Math.max(4, Math.round(width * height / 1750)));
       for (let i = 0; i < count; i++) {
         const flake = flakes[i];
         flake.y = (flake.y + flake.speed * dt / height) % 1;
@@ -62,15 +84,11 @@ export function weather(canvas, background, board) {
         const px = x + ((flake.x + sway + 1) % 1) * width;
         const py = y + flake.y * height;
         snow.globalAlpha = flake.alpha;
-        snow.fillStyle = '#fffbef';
-        snow.beginPath();
-        snow.arc(px, py, flake.radius, 0, Math.PI * 2);
-        snow.fill();
-        if (daylight) {
-          snow.strokeStyle = '#55718c';
-          snow.lineWidth = .85;
-          snow.stroke();
-        }
+        const gray = (daylight ? 138 : 179) + Math.round(flake.tone * (daylight ? 98 : 76));
+        snow.strokeStyle = 'rgb(' + gray + ',' + (gray + 2) + ',' + (gray + 5) + ')';
+        snow.lineWidth = flake.radius < 2.5 ? 1.15 : 1.45;
+        snow.lineCap = 'round';
+        snowCrystal(px, py, flake.radius, flake.phase + time * flake.spin);
       }
     }
     snow.globalAlpha = 1;
@@ -81,6 +99,14 @@ export function weather(canvas, background, board) {
     radial.addColorStop(1, 'rgba(' + color + ',0)');
     context.fillStyle = radial;
     context.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+  }
+  function twinkleBulb(x, y, color, index, time, cover) {
+    const pulse = (.5 + .5 * Math.sin(time * (1.45 + index % 4 * .23) + index * 2.39)) ** 2;
+    const radius = Math.max(3, cover * .0042);
+    // The bulbs are printed in the artwork. Shade the painted core as the halo fades.
+    glow(x, y, radius * 1.55, '12,22,35', .67 * (1 - pulse));
+    glow(x, y, radius * 3.5, color, .86 * pulse);
+    glow(x, y, radius * 1.1, '255,248,221', .87 * pulse);
   }
   function glint(x, y, size, strength) {
     glow(x, y, size * 1.85, '255,230,166', strength * .65);
@@ -108,7 +134,7 @@ export function weather(canvas, background, board) {
       const offset = (width - cover) * .89;
       function mapX(x) { return x * cover + offset; }
       for (const [i, [x, y, color]] of bulbs.entries()) {
-        glow(mapX(x), y * height, Math.max(5, width * .009), color, .17 + .13 * Math.sin(time * 1.7 + i * 5.3));
+        twinkleBulb(mapX(x), y * height, color, i, time, cover);
       }
       for (const [i, [x, y]] of snowGlints.entries()) {
         const strength = Math.pow(Math.max(0, Math.sin(time * (1.05 + i * .026) + i * 3.7)), 5);
@@ -121,8 +147,8 @@ export function weather(canvas, background, board) {
         const fade = 1 - p.age / p.life;
         glow(p.x + p.dx * p.age, p.y + p.dy * p.age + 35 * p.age ** 2, 2 + 3 * fade, p.color, fade);
       }
+      drawSnow(dt, time);
     }
-    if (!document.hidden) drawSnow(dt, time);
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);

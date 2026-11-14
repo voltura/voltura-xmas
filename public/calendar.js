@@ -32,6 +32,7 @@ const doors = new Map();
 const projectImages = new Map();
 const card = $('picture');
 const reveal = $('reveal');
+const doorTooltip = $('door-tooltip');
 const effects = weather($('weather'), $('background-snow'), card.closest('.calendar'));
 const music = musicBox();
 const read = (store, key, fallback) => {
@@ -60,6 +61,7 @@ let musicOn = false;
 let stopClip = () => {};
 let feedback = '';
 let lastDoor = null;
+let tooltipAnchor = null;
 const t = () => text[language];
 const isAvailable = day => day <= state.available || state.unlocked;
 const isOpen = day => isAvailable(day) && (opened.has(day) || early.has(day));
@@ -70,6 +72,28 @@ const urlFor = project => project.urlByLanguage?.[language] ?? project.url;
 function padlock(open) {
   return '<svg class="padlock" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="4" y="9" width="12" height="9" rx="2"/><path d="' +
     (open ? 'M9 9V6.4a3.7 3.7 0 017.2-1.2' : 'M6.5 9V6a3.5 3.5 0 017 0v3') + '"/></svg>';
+}
+
+function hideDoorTooltip(anchor = tooltipAnchor) {
+  if (!anchor || anchor !== tooltipAnchor) return;
+  anchor.removeAttribute('aria-describedby');
+  tooltipAnchor = null;
+  doorTooltip.hidden = true;
+}
+
+function showDoorTooltip(anchor, project) {
+  if (!project || anchor.hidden || reveal.open) return;
+  hideDoorTooltip();
+  const target = anchor.getBoundingClientRect();
+  doorTooltip.textContent = project.title;
+  doorTooltip.hidden = false;
+  const { width, height } = doorTooltip.getBoundingClientRect();
+  const left = Math.max(8, Math.min(target.left + (target.width - width) / 2, document.documentElement.clientWidth - width - 8));
+  const top = target.top >= height + 12 ? target.top - height - 7 : target.bottom + 7;
+  doorTooltip.style.left = left + 'px';
+  doorTooltip.style.top = top + 'px';
+  tooltipAnchor = anchor;
+  anchor.setAttribute('aria-describedby', doorTooltip.id);
 }
 
 function setupDoors() {
@@ -88,6 +112,15 @@ function setupDoors() {
     image.target = '_blank';
     image.rel = 'noopener';
     image.hidden = true;
+    image.addEventListener('pointerenter', event => {
+      if (event.pointerType !== 'touch') showDoorTooltip(image, projectImages.get(day));
+    });
+    image.addEventListener('pointerleave', () => {
+      if (document.activeElement !== image) hideDoorTooltip(image);
+    });
+    image.addEventListener('focus', () => showDoorTooltip(image, projectImages.get(day)));
+    image.addEventListener('blur', () => hideDoorTooltip(image));
+    image.addEventListener('click', () => hideDoorTooltip(image));
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'door-button';
@@ -258,7 +291,8 @@ async function waitForFlap(flap) {
 async function closeDoor(day) {
   if (busy || !isOpen(day)) return;
   busy = true;
-  const { door, flap, button } = doors.get(day);
+  const { door, flap, button, image } = doors.get(day);
+  hideDoorTooltip(image);
   door.classList.add('closing');
   door.classList.remove('open');
   opened.delete(day);
@@ -294,6 +328,7 @@ async function openDoor(day) {
     if (day === 24) await new Promise(resolve => setTimeout(resolve, 1000));
     active = { project, day };
     const target = lastDoor.getBoundingClientRect();
+    hideDoorTooltip();
     reveal.showModal();
     const box = reveal.getBoundingClientRect();
     reveal.animate([
@@ -364,6 +399,11 @@ reveal.addEventListener('close', () => {
 });
 addEventListener('visibilitychange', () => {
   if (!document.hidden) void refresh();
+});
+addEventListener('scroll', () => hideDoorTooltip(), { passive: true });
+addEventListener('resize', () => hideDoorTooltip());
+addEventListener('keydown', event => {
+  if (event.key === 'Escape') hideDoorTooltip();
 });
 setupDoors();
 render();
