@@ -7,7 +7,7 @@ const encoder = new TextEncoder();
 const tokenLifetime = 12 * 60 * 60 * 1000;
 const types = {
   html: 'text/html; charset=utf-8', css: 'text/css; charset=utf-8', js: 'text/javascript; charset=utf-8',
-  jpg: 'image/jpeg', webp: 'image/webp', woff2: 'font/woff2', svg: 'image/svg+xml',
+  jpg: 'image/jpeg', webp: 'image/webp', woff2: 'font/woff2', svg: 'image/svg+xml', mp4: 'video/mp4',
 };
 const json = (data, status = 200) => Response.json(data, {
   status, headers: { 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff' },
@@ -55,19 +55,22 @@ export function createHandler(clock = Date.now) {
       return json({ token: await unlockToken(env.CALENDAR_SIGNING_KEY, now) });
     }
     const door = /^\/api\/door\/(\d{1,2})$/.exec(path);
-    const thumbnail = /^\/reveal\/(\d{1,2})\.webp$/.exec(path);
-    if (door || thumbnail) {
-      const day = Number((door ?? thumbnail)[1]);
+    const media = /^\/reveal\/(\d{1,2})\.(webp|mp4)$/.exec(path);
+    if (door || media) {
+      const day = Number((door ?? media)[1]);
       const project = calendar[day - 1];
       if (!project) return json({ error: 'not-found' }, 404);
       const unlocked = day <= calendarDate(now).available ||
         await validToken(env.CALENDAR_SIGNING_KEY, request.headers.get('Authorization'), now);
       if (!unlocked) return json({ error: 'locked' }, 403);
-      if (thumbnail) return asset('/assets/' + project.image + '.webp', true);
+      if (media?.[2] === 'webp') return asset('/assets/' + project.image + '.webp', true);
+      if (media?.[2] === 'mp4') {
+        return day === 24 ? asset('/assets/christmas.mp4', true) : json({ error: 'not-found' }, 404);
+      }
       const { image, ...details } = project;
       return json({ ...details, image: '/reveal/' + day + '.webp' });
     }
-    if (path.startsWith('/api/') || /^\/assets\/.*\.webp$/.test(path)) {
+    if (path.startsWith('/api/') || /^\/assets\/.*\.(?:webp|mp4)$/.test(path)) {
       return json({ error: 'not-found' }, 404);
     }
     if (request.method !== 'GET' && request.method !== 'HEAD') return json({ error: 'method' }, 405);

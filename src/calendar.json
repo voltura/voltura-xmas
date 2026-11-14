@@ -1,7 +1,7 @@
 [
   {
     "day": 1,
-    "title": "Ord",
+    "title": "Voltura Ord",
     "description": {
       "sv": "Ett svenskt ordspel för två.",
       "en": "A Swedish word game for two."
@@ -290,6 +290,9 @@
       "en": "Meet the developer behind the calendar and explore his work."
     },
     "url": "https://voltura.se/",
+    "urlByLanguage": {
+      "sv": "https://voltura.se/?lang=sv"
+    },
     "image": "joakim",
     "note": {
       "sv": "De korta dagarna gör det lätt att uppskatta varje stund av dagsljus.",
@@ -334,6 +337,7 @@
     },
     "url": "https://worlds.voltura.se/",
     "image": "worlds",
+    "video": "/reveal/24.mp4",
     "note": {
       "sv": "God jul! Hoppas din julafton bjuder på värme och en stunds ro.",
       "en": "Merry Christmas! May your Christmas Eve bring warmth and a little peace."

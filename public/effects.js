@@ -1,7 +1,8 @@
-export function weather(canvas, reducedMotion) {
+export function weather(canvas, background, reducedMotion) {
   const context = canvas.getContext('2d');
-  if (!context) return { spark() {}, fireworks() {} };
-  const flakes = Array.from({ length: 62 }, () => ({
+  const snow = background.getContext('2d');
+  if (!context || !snow) return { spark() {}, fireworks() {} };
+  const flakes = Array.from({ length: 106 }, () => ({
     x: Math.random(), y: Math.random(), speed: .01 + Math.random() * .034,
     radius: .4 + Math.random() * 1.6, phase: Math.random() * 6, alpha: .23 + Math.random() * .65,
   }));
@@ -14,16 +15,17 @@ export function weather(canvas, reducedMotion) {
   const snowGlints = [[.16,.82],[.26,.91],[.35,.88],[.47,.84],[.63,.92],[.73,.86],[.81,.81]];
   const sparks = [];
   let width = 1, height = 1, previous = 0;
-  function size() {
-    const rect = canvas.getBoundingClientRect();
+  let snowWidth = 1, snowHeight = 1;
+  function size(layer, drawing) {
+    const rect = layer.getBoundingClientRect();
     const dp = Math.min(devicePixelRatio, 2);
-    width = rect.width;
-    height = rect.height;
-    canvas.width = Math.round(width * dp);
-    canvas.height = Math.round(height * dp);
-    context.setTransform(dp, 0, 0, dp, 0, 0);
+    layer.width = Math.round(rect.width * dp);
+    layer.height = Math.round(rect.height * dp);
+    drawing.setTransform(dp, 0, 0, dp, 0, 0);
+    return [rect.width, rect.height];
   }
-  new ResizeObserver(size).observe(canvas);
+  new ResizeObserver(() => { [width, height] = size(canvas, context); }).observe(canvas);
+  new ResizeObserver(() => { [snowWidth, snowHeight] = size(background, snow); }).observe(background);
   function glow(x, y, radius, color, alpha) {
     const radial = context.createRadialGradient(x, y, 0, x, y, radius);
     radial.addColorStop(0, 'rgba(' + color + ',' + alpha + ')');
@@ -36,9 +38,10 @@ export function weather(canvas, reducedMotion) {
     const dt = Math.min(.06, time - previous);
     previous = time;
     context.clearRect(0, 0, width, height);
+    snow.clearRect(0, 0, snowWidth, snowHeight);
     if (!document.hidden && !reducedMotion.matches) {
       const cover = matchMedia('(max-width:700px)').matches ? Math.max(width, height * 1.777) : width;
-      const offset = (width - cover) * .63;
+      const offset = (width - cover) * .89;
       function mapX(x) { return x * cover + offset; }
       for (const [i, [x, y, color]] of bulbs.entries()) {
         glow(mapX(x), y * height, Math.max(5, width * .009), color, .17 + .13 * Math.sin(time * 1.7 + i * 5.3));
@@ -50,10 +53,10 @@ export function weather(canvas, reducedMotion) {
       for (const f of flakes) {
         f.y = (f.y + f.speed * dt) % 1;
         f.x = (f.x + (Math.sin(time * .7 + f.phase) * .008 + .005) * dt + 1) % 1;
-        context.fillStyle = 'rgba(255,251,237,' + f.alpha + ')';
-        context.beginPath();
-        context.arc(f.x * width, f.y * height, f.radius, 0, Math.PI * 2);
-        context.fill();
+        snow.fillStyle = 'rgba(255,251,237,' + f.alpha + ')';
+        snow.beginPath();
+        snow.arc(f.x * snowWidth, f.y * snowHeight, f.radius, 0, Math.PI * 2);
+        snow.fill();
       }
       for (let i = sparks.length - 1; i >= 0; i--) {
         const p = sparks[i];

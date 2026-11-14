@@ -5,6 +5,6 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "dev": "npm run build && node scripts/preview.mjs",
-    "test": "node --test"
+    "test": "npm run build && node --test"
   }
 }

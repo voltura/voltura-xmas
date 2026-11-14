@@ -5,7 +5,7 @@ const text = {
   sv: {
     title: 'Julkalender', month: 'december', night: 'Natt', day: 'Dag', music: 'Musik', off: 'Musik av',
     countdown: n => n === 0 ? 'God jul!' : n === 1 ? '1 dag kvar till julafton' : n + ' dagar kvar till julafton',
-    door: n => 'Lucka ' + n, locked: n => 'Öppnas ' + n + ' december', ready: 'Redo att öppnas',
+    door: n => 'Lucka ' + n, locked: n => 'Öppnas ' + n + ' december', ready: 'Redo att öppnas', shut: n => 'Stäng lucka ' + n,
     bell: 'Julbjällra', found: 'Du hittade den hemliga julbjällran! Nu kan du öppna alla 24 luckor.',
     error: 'Det gick inte att öppna just nu. Försök igen.', close: 'Stäng', skip: 'Hoppa över',
     visit: 'Besök projektet', settings: 'Inställningar', switchLanguage: 'Switch to English', merry: 'God jul!',
@@ -14,7 +14,7 @@ const text = {
   en: {
     title: 'Christmas Calendar', month: 'December', night: 'Night', day: 'Day', music: 'Music', off: 'Music off',
     countdown: n => n === 0 ? 'Merry Christmas!' : n === 1 ? '1 day until Christmas Eve' : n + ' days until Christmas Eve',
-    door: n => 'Door ' + n, locked: n => 'Opens December ' + n, ready: 'Ready to open',
+    door: n => 'Door ' + n, locked: n => 'Opens December ' + n, ready: 'Ready to open', shut: n => 'Close door ' + n,
     bell: 'Christmas bell', found: 'You found the hidden Christmas bell! All 24 doors are now yours to open.',
     error: 'That could not be opened right now. Try again.', close: 'Close', skip: 'Skip',
     visit: 'Visit project', settings: 'Settings', switchLanguage: 'Byt till svenska', merry: 'Merry Christmas!',
@@ -23,9 +23,9 @@ const text = {
 };
 const motion = matchMedia('(prefers-reduced-motion: reduce)');
 const positions = [
-  [11, 34], [4, 15], [24, 50], [3, 66], [36, 34], [15, 67],
-  [3, 43], [28, 74], [80, 10], [11, 85], [33, 57], [44, 46],
-  [21, 25], [45, 79], [55, 25], [20, 87], [76, 78], [67, 11],
+  [12, 34], [4, 15], [24, 50], [3, 70], [36, 33], [16, 67],
+  [3, 42], [28, 74], [80, 10], [11, 85], [33, 57], [46, 46],
+  [21, 25], [45, 79], [55, 25], [20, 87], [76, 78], [69, 42],
   [89, 29], [63, 84], [89, 85], [36, 87], [7, 55], [78, 25],
 ];
 const mobileOrder = [2, 13, 15, 9, 19, 7, 1, 11, 24, 3, 8, 6, 4, 23, 14, 12, 22, 10, 5, 16, 18, 20, 17, 21];
@@ -33,7 +33,7 @@ const doors = new Map();
 const projectImages = new Map();
 const card = $('picture');
 const reveal = $('reveal');
-const effects = weather($('weather'), motion);
+const effects = weather($('weather'), $('background-snow'), motion);
 const music = musicBox();
 const read = (store, key, fallback) => {
   try { return JSON.parse(window[store].getItem(key)) ?? fallback; } catch { return fallback; }
@@ -66,7 +66,7 @@ const isAvailable = day => day <= state.available || state.unlocked;
 const isOpen = day => isAvailable(day) && (opened.has(day) || early.has(day));
 const auth = () => token ? { Authorization: 'Bearer ' + token } : {};
 const dateLabel = day => language === 'sv' ? day + ' december' : 'December ' + day;
-const urlFor = project => project.day === 21 && language === 'sv' ? project.url + '?lang=sv' : project.url;
+const urlFor = project => project.urlByLanguage?.[language] ?? project.url;
 
 function padlock(open) {
   return '<svg class="padlock" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="4" y="9" width="12" height="9" rx="2"/><path d="' +
@@ -93,7 +93,10 @@ function setupDoors() {
     const flap = document.createElement('span');
     flap.className = 'flap';
     button.append(flap);
-    button.addEventListener('click', () => void openDoor(day));
+    button.addEventListener('click', () => {
+      if (isOpen(day)) void closeDoor(day);
+      else void openDoor(day);
+    });
     door.append(image, button);
     $('doors').append(door);
     doors.set(day, { door, button, flap, image });
@@ -127,14 +130,13 @@ function render() {
     const project = projectImages.get(day);
     const visible = isOpen(day) && project;
     door.classList.toggle('available', available);
-    door.classList.toggle('open', Boolean(visible));
-    button.tabIndex = visible ? -1 : 0;
-    button.setAttribute('aria-label', word.door(day) + ', ' + (available ? word.ready : word.locked(day)));
+    if (!door.classList.contains('closing')) door.classList.toggle('open', Boolean(visible));
+    button.setAttribute('aria-label', visible ? word.shut(day) : word.door(day) + ', ' + (available ? word.ready : word.locked(day)));
     if (flap.dataset.status !== String(available)) {
       flap.dataset.status = String(available);
       flap.innerHTML = '<span>' + day + '</span>' + padlock(available);
     }
-    image.hidden = !visible;
+    if (!door.classList.contains('closing')) image.hidden = !visible;
     if (visible) {
       image.href = urlFor(project);
       image.setAttribute('aria-label', word.door(day) + ', ' + project.title);
@@ -180,7 +182,7 @@ async function refresh() {
   }
 }
 
-function presentation(project, day) {
+async function presentation(project, day) {
   const word = t();
   $('reveal-date').textContent = dateLabel(day) + (day === 24 ? ' · ' + word.merry : '');
   $('reveal-title').textContent = project.title;
@@ -206,8 +208,23 @@ function presentation(project, day) {
   video.muted = true;
   video.playsInline = true;
   video.preload = 'metadata';
-  video.src = project.video;
   video.poster = project.thumbnail;
+  let videoUrl = project.video;
+  if (videoUrl.startsWith('/')) {
+    try {
+      const response = await fetch(videoUrl, { headers: auth() });
+      if (!response.ok) throw new Error('Preview unavailable');
+      videoUrl = URL.createObjectURL(await response.blob());
+    } catch {
+      if (reveal.open) promo();
+      return;
+    }
+    if (!reveal.open || active?.day !== day) {
+      URL.revokeObjectURL(videoUrl);
+      return;
+    }
+  }
+  video.src = videoUrl;
   const skip = document.createElement('button');
   skip.className = 'skip';
   skip.type = 'button';
@@ -224,10 +241,35 @@ function presentation(project, day) {
   stopClip = () => {
     clearTimeout(timeout);
     video.pause();
+    if (videoUrl.startsWith('blob:')) URL.revokeObjectURL(videoUrl);
     if (musicOn) void music.resume();
     stopClip = () => {};
   };
   video.play().catch(() => { if (video.isConnected) promo(); });
+}
+
+async function waitForFlap(flap) {
+  if (motion.matches) return;
+  // Flush styles so the transition is present before reading its completion.
+  void getComputedStyle(flap).transform;
+  await Promise.allSettled(flap.getAnimations().map(animation => animation.finished));
+}
+
+async function closeDoor(day) {
+  if (busy || !isOpen(day)) return;
+  busy = true;
+  const { door, flap, button } = doors.get(day);
+  door.classList.add('closing');
+  door.classList.remove('open');
+  opened.delete(day);
+  early.delete(day);
+  save(local, key + 'opened', [...opened]);
+  save(session, key + 'early', [...early]);
+  await waitForFlap(flap);
+  door.classList.remove('closing');
+  render();
+  button.focus({ preventScroll: true });
+  busy = false;
 }
 
 async function openDoor(day) {
@@ -245,9 +287,11 @@ async function openDoor(day) {
     save(normal ? local : session, key + (normal ? 'opened' : 'early'), [...(normal ? opened : early)]);
     feedback = '';
     render();
-    lastDoor = doors.get(day).image;
+    const { flap, image } = doors.get(day);
+    lastDoor = image;
+    await waitForFlap(flap);
     if (day === 24) effects.fireworks();
-    if (!motion.matches) await new Promise(resolve => setTimeout(resolve, day === 24 ? 1150 : 580));
+    if (day === 24 && !motion.matches) await new Promise(resolve => setTimeout(resolve, 1000));
     active = { project, day };
     const target = lastDoor.getBoundingClientRect();
     reveal.showModal();
@@ -259,7 +303,7 @@ async function openDoor(day) {
         { opacity: 1, transform: 'none' },
       ], { duration: 420, easing: 'cubic-bezier(.2,.75,.3,1)' });
     }
-    presentation(project, day);
+    void presentation(project, day);
     $('close').focus();
   } catch {
     feedback = 'error';
@@ -310,7 +354,7 @@ $('lang').addEventListener('click', () => {
   render();
   if (active) {
     stopClip();
-    presentation(active.project, active.day);
+    void presentation(active.project, active.day);
   }
 });
 $('close').addEventListener('click', () => reveal.close());
