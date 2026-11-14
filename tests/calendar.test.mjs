@@ -73,7 +73,12 @@ test('the bell unlocks all projects for its signed, expiring session', async () 
     assert.equal(door.status, 200);
     assert.match(door.headers.get('Cache-Control'), /no-store/);
     const project = await door.json();
-    assert(Number.isInteger(project.started));
+    if (day === 21) {
+      assert.equal(project.born, 1978);
+      assert.equal(project.started, undefined);
+    } else {
+      assert(Number.isInteger(project.started));
+    }
     if (day === 8 || day === 15) assert.equal(project.started, 2021);
     if (day === 10) assert.equal(project.started, 2022);
     const artwork = await fetch(project.image, { headers });

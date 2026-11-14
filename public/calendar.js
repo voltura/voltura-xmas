@@ -10,7 +10,7 @@ const text = {
     bell: 'Julbjällra', found: 'Du hittade den hemliga julbjällran! Nu kan du öppna alla 24 luckor.',
     relocked: 'Kommande luckor är stängda och låsta igen.',
     error: 'Det gick inte att öppna just nu. Försök igen.', close: 'Stäng',
-    visit: 'Besök projektet', started: 'Startat', settings: 'Inställningar', switchLanguage: 'Switch to English', merry: 'God jul!',
+    visit: 'Besök projektet', started: 'Startat', born: 'Född', settings: 'Inställningar', switchLanguage: 'Switch to English', merry: 'God jul!',
     before: 'Första luckan öppnas den 1 december.',
     share: 'Dela julkalendern', shareLink: 'Länk till julkalendern', copy: 'Kopiera länk',
     copied: 'Länken kopierades.', copyHelp: 'Markera och kopiera länken ovan.', email: 'E-post',
@@ -23,7 +23,7 @@ const text = {
     bell: 'Christmas bell', found: 'You found the hidden Christmas bell! All 24 doors are now yours to open.',
     relocked: 'Future doors are closed and locked again.',
     error: 'That could not be opened right now. Try again.', close: 'Close',
-    visit: 'Visit project', started: 'Started', settings: 'Settings', switchLanguage: 'Byt till svenska', merry: 'Merry Christmas!',
+    visit: 'Visit project', started: 'Started', born: 'Born', settings: 'Settings', switchLanguage: 'Byt till svenska', merry: 'Merry Christmas!',
     before: 'The first door opens on December 1.',
     share: 'Share calendar', shareLink: 'Calendar link', copy: 'Copy link',
     copied: 'Link copied.', copyHelp: 'Select and copy the link above.', email: 'Email',
@@ -316,9 +316,10 @@ async function presentation(project, day) {
   const word = t();
   $('reveal-date').textContent = dateLabel(day) + (day === 24 ? ' · ' + word.merry : '');
   $('reveal-title').textContent = project.title;
-  $('reveal-start-label').textContent = word.started + ' ';
-  $('reveal-start-year').dateTime = project.started.toString();
-  $('reveal-start-year').textContent = project.started;
+  const year = project.born ?? project.started;
+  $('reveal-start-label').textContent = (project.born ? word.born : word.started) + ' ';
+  $('reveal-start-year').dateTime = String(year);
+  $('reveal-start-year').textContent = year;
   $('reveal-note').textContent = project.note[language];
   $('reveal-description').textContent = project.description[language];
   $('project-link').textContent = word.visit + ' ↗';
