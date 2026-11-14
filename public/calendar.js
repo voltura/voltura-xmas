@@ -135,12 +135,11 @@ function hideDoorTooltip(anchor = tooltipAnchor) {
   if (!anchor || anchor !== tooltipAnchor) return;
   clearTimeout(tooltipTimer);
   anchor.removeAttribute('aria-describedby');
-  if (touchPreview === anchor) touchPreview = null;
   tooltipAnchor = null;
   doorTooltip.hidden = true;
 }
 
-function showDoorTooltip(anchor, label, placement = anchor) {
+function showDoorTooltip(anchor, label, placement = anchor, duration = 3000) {
   if (!label || anchor.hidden || reveal.open) return;
   hideDoorTooltip();
   const target = placement.getBoundingClientRect();
@@ -153,6 +152,7 @@ function showDoorTooltip(anchor, label, placement = anchor) {
   doorTooltip.style.top = top + 'px';
   tooltipAnchor = anchor;
   anchor.setAttribute('aria-describedby', doorTooltip.id);
+  tooltipTimer = setTimeout(() => hideDoorTooltip(anchor), duration);
 }
 
 function setupDoors() {
@@ -191,6 +191,7 @@ function setupDoors() {
         showDoorTooltip(image, projectImages.get(day)?.title);
         touchPreview = image;
       } else {
+        touchPreview = null;
         hideDoorTooltip(image);
       }
       touched = false;
@@ -278,7 +279,10 @@ function render() {
     }
     if (!door.classList.contains('closing')) {
       image.hidden = !visible;
-      if (image.hidden) hideDoorTooltip(image);
+      if (image.hidden) {
+        if (touchPreview === image) touchPreview = null;
+        hideDoorTooltip(image);
+      }
     }
     if (visible) {
       image.href = urlFor(project);
@@ -429,8 +433,7 @@ async function openDoor(day) {
     const { button } = doors.get(day);
     feedback = day;
     render();
-    showDoorTooltip(button, waitLabel(day));
-    tooltipTimer = setTimeout(() => hideDoorTooltip(button), 4200);
+    showDoorTooltip(button, waitLabel(day), button, 4200);
     return;
   }
   busy = true;
@@ -612,8 +615,15 @@ addEventListener('storage', event => {
 });
 addEventListener('scroll', () => hideDoorTooltip(), { passive: true });
 addEventListener('resize', () => hideDoorTooltip());
+document.addEventListener('pointerdown', event => {
+  if (touchPreview && !touchPreview.contains(event.target)) touchPreview = null;
+  if (tooltipAnchor && !tooltipAnchor.contains(event.target)) hideDoorTooltip();
+}, true);
 addEventListener('keydown', event => {
-  if (event.key === 'Escape') hideDoorTooltip();
+  if (event.key === 'Escape') {
+    touchPreview = null;
+    hideDoorTooltip();
+  }
 });
 setupDoors();
 scheduleTomte($('tomte'));
