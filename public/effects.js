@@ -12,7 +12,7 @@ export function weather(canvas, background, reducedMotion) {
     [.835, .666, '255,87,52'], [.88, .686, '73,173,255'], [.922, .699, '255,71,43'],
     [.833, .738, '70,245,151'], [.881, .745, '255,83,49'],
   ];
-  const snowGlints = [[.16,.82],[.26,.91],[.35,.88],[.47,.84],[.63,.92],[.73,.86],[.81,.81]];
+  const snowGlints = [[.16,.82],[.26,.91],[.35,.88],[.47,.84],[.57,.79],[.63,.92],[.68,.84],[.73,.86],[.81,.81],[.91,.9]];
   const sparks = [];
   let width = 1, height = 1, previous = 0;
   let snowWidth = 1, snowHeight = 1;
@@ -33,6 +33,21 @@ export function weather(canvas, background, reducedMotion) {
     context.fillStyle = radial;
     context.fillRect(x - radius, y - radius, radius * 2, radius * 2);
   }
+  function glint(x, y, size, strength) {
+    glow(x, y, size * 1.85, '255,230,166', strength * .65);
+    context.fillStyle = 'rgba(255,251,231,' + strength + ')';
+    context.beginPath();
+    context.moveTo(x, y - size);
+    context.lineTo(x + size * .19, y - size * .17);
+    context.lineTo(x + size * .77, y);
+    context.lineTo(x + size * .19, y + size * .17);
+    context.lineTo(x, y + size);
+    context.lineTo(x - size * .19, y + size * .17);
+    context.lineTo(x - size * .77, y);
+    context.lineTo(x - size * .19, y - size * .17);
+    context.closePath();
+    context.fill();
+  }
   function frame(ms) {
     const time = ms / 1000;
     const dt = Math.min(.06, time - previous);
@@ -47,8 +62,8 @@ export function weather(canvas, background, reducedMotion) {
         glow(mapX(x), y * height, Math.max(5, width * .009), color, .17 + .13 * Math.sin(time * 1.7 + i * 5.3));
       }
       for (const [i, [x, y]] of snowGlints.entries()) {
-        const strength = Math.pow(Math.max(0, Math.sin(time * 1.1 + i * 5)), 9);
-        if (strength > .12) glow(mapX(x), y * height, 4, '255,245,217', strength * .85);
+        const strength = Math.pow(Math.max(0, Math.sin(time * (1.05 + i * .026) + i * 3.7)), 5);
+        if (strength > .1) glint(mapX(x), y * height, Math.max(4, Math.min(8, width * .006)) * (i % 3 === 0 ? 1.25 : 1), strength);
       }
       for (const f of flakes) {
         f.y = (f.y + f.speed * dt) % 1;
