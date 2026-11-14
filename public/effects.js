@@ -214,14 +214,6 @@ export function scheduleTomte(tomte) {
   later(75, 135);
 }
 
-// James Pierpont's Jingle Bells chorus. A quiet oscillator arrangement played on demand.
-const chorus = [
-  [64,1],[64,1],[64,2],[64,1],[64,1],[64,2],[64,1],[67,1],[60,1.5],[62,.5],[64,4],
-  [65,1],[65,1],[65,1.5],[65,.5],[65,1],[64,1],[64,1],[64,.5],[64,.5],[64,1],[62,1],[62,1],[64,1],[62,2],[67,2],
-  [64,1],[64,1],[64,2],[64,1],[64,1],[64,2],[64,1],[67,1],[60,1.5],[62,.5],[64,4],
-  [65,1],[65,1],[65,1.5],[65,.5],[65,1],[64,1],[64,1],[64,.5],[64,.5],[67,1],[67,1],[65,1],[62,1],[60,4],
-];
-
 let bellAudio;
 export async function ringBell() {
   try {
@@ -248,48 +240,21 @@ export async function ringBell() {
 }
 
 export function musicBox() {
-  let audio, timer, index = 0, next = 0, generation = 0;
-  function note(pitch, time) {
-    for (const [multiple, volume, decay] of [[1, .06, .65], [2.01, .013, .22], [3, .004, .12]]) {
-      const tone = audio.createOscillator();
-      const gain = audio.createGain();
-      tone.frequency.value = multiple * 440 * 2 ** ((pitch - 69) / 12);
-      gain.gain.setValueAtTime(.0001, time);
-      gain.gain.exponentialRampToValueAtTime(volume, time + .016);
-      gain.gain.exponentialRampToValueAtTime(.0001, time + decay);
-      tone.connect(gain).connect(audio.destination);
-      tone.start(time);
-      tone.stop(time + decay);
-    }
-  }
-  function schedule() {
-    while (next < audio.currentTime + .18) {
-      const [pitch, length] = chorus[index];
-      note(pitch, next);
-      if (index % 6 === 0) note(pitch - 12, next);
-      index = (index + 1) % chorus.length;
-      next += length * .36 + (index === 0 ? 2 : 0);
-    }
-  }
+  let audio;
   return {
     async resume() {
-      const request = ++generation;
+      if (!audio) {
+        audio = new Audio('/assets/jingle-bells-piano.mp3');
+        audio.loop = true;
+        audio.volume = .52;
+      }
       try {
-        if (timer) return true;
-        audio ??= new AudioContext();
-        await audio.resume();
-        if (request !== generation) return false;
-        next = audio.currentTime + .08;
-        schedule();
-        timer = setInterval(schedule, 100);
+        await audio.play();
         return true;
       } catch { return false; }
     },
     suspend() {
-      generation++;
-      clearInterval(timer);
-      timer = null;
-      if (audio?.state === 'running') void audio.suspend().catch(() => {});
+      audio?.pause();
     },
   };
 }

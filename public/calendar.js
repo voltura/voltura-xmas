@@ -6,6 +6,7 @@ const text = {
     title: 'Julkalender', month: 'december', night: 'Natt', day: 'Dag', music: 'Musik', off: 'Musik av',
     countdown: n => n === 0 ? 'God jul!' : n === 1 ? '1 dag kvar till julafton' : n + ' dagar kvar till julafton',
     door: n => 'Lucka ' + n, locked: n => 'Öppnas ' + n + ' december', ready: 'Redo att öppnas', shut: n => 'Stäng lucka ' + n,
+    opensIn: n => n === 1 ? 'Öppnas i morgon' : 'Öppnas om ' + n + ' dagar',
     bell: 'Julbjällra', found: 'Du hittade den hemliga julbjällran! Nu kan du öppna alla 24 luckor.',
     relocked: 'Kommande luckor är stängda och låsta igen.',
     error: 'Det gick inte att öppna just nu. Försök igen.', close: 'Stäng',
@@ -18,6 +19,7 @@ const text = {
     title: 'Christmas Calendar', month: 'December', night: 'Night', day: 'Day', music: 'Music', off: 'Music off',
     countdown: n => n === 0 ? 'Merry Christmas!' : n === 1 ? '1 day until Christmas Eve' : n + ' days until Christmas Eve',
     door: n => 'Door ' + n, locked: n => 'Opens December ' + n, ready: 'Ready to open', shut: n => 'Close door ' + n,
+    opensIn: n => n === 1 ? 'Opens tomorrow' : 'Opens in ' + n + ' days',
     bell: 'Christmas bell', found: 'You found the hidden Christmas bell! All 24 doors are now yours to open.',
     relocked: 'Future doors are closed and locked again.',
     error: 'That could not be opened right now. Try again.', close: 'Close',
@@ -96,6 +98,7 @@ let presentationRequest = null;
 let feedback = '';
 let lastDoor = null;
 let tooltipAnchor = null;
+let tooltipTimer;
 let touchPreview = null;
 let sharing = false;
 const t = () => text[language];
@@ -104,6 +107,10 @@ const isOpen = day => isAvailable(day) && (opened.has(day) || early.has(day));
 const auth = () => token ? { Authorization: 'Bearer ' + token } : {};
 const dateLabel = day => language === 'sv' ? day + ' december' : 'December ' + day;
 const urlFor = project => project.urlByLanguage?.[language] ?? project.url;
+function waitLabel(day) {
+  const remaining = state.remaining === null ? null : state.remaining - (24 - day);
+  return remaining > 0 ? t().opensIn(remaining) : t().locked(day);
+}
 
 function updateOption(option, value) {
   const url = new URL(location.href);
@@ -118,17 +125,18 @@ function padlock(open) {
 
 function hideDoorTooltip(anchor = tooltipAnchor) {
   if (!anchor || anchor !== tooltipAnchor) return;
+  clearTimeout(tooltipTimer);
   anchor.removeAttribute('aria-describedby');
   if (touchPreview === anchor) touchPreview = null;
   tooltipAnchor = null;
   doorTooltip.hidden = true;
 }
 
-function showDoorTooltip(anchor, project) {
-  if (!project || anchor.hidden || reveal.open) return;
+function showDoorTooltip(anchor, label) {
+  if (!label || anchor.hidden || reveal.open) return;
   hideDoorTooltip();
   const target = anchor.getBoundingClientRect();
-  doorTooltip.textContent = project.title;
+  doorTooltip.textContent = label;
   doorTooltip.hidden = false;
   const { width, height } = doorTooltip.getBoundingClientRect();
   const left = Math.max(8, Math.min(target.left + (target.width - width) / 2, document.documentElement.clientWidth - width - 8));
@@ -156,7 +164,7 @@ function setupDoors() {
     image.rel = 'noopener';
     image.hidden = true;
     image.addEventListener('pointerenter', event => {
-      if (event.pointerType !== 'touch') showDoorTooltip(image, projectImages.get(day));
+      if (event.pointerType !== 'touch') showDoorTooltip(image, projectImages.get(day)?.title);
     });
     image.addEventListener('pointerleave', () => {
       if (document.activeElement !== image) hideDoorTooltip(image);
@@ -166,13 +174,13 @@ function setupDoors() {
       touched = event.pointerType === 'touch';
     });
     image.addEventListener('focus', () => {
-      if (!touched) showDoorTooltip(image, projectImages.get(day));
+      if (!touched) showDoorTooltip(image, projectImages.get(day)?.title);
     });
     image.addEventListener('blur', () => hideDoorTooltip(image));
     image.addEventListener('click', event => {
       if (touched && event.detail !== 0 && touchPreview !== image) {
         event.preventDefault();
-        showDoorTooltip(image, projectImages.get(day));
+        showDoorTooltip(image, projectImages.get(day)?.title);
         touchPreview = image;
       } else {
         hideDoorTooltip(image);
@@ -182,6 +190,7 @@ function setupDoors() {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'door-button';
+    button.addEventListener('blur', () => hideDoorTooltip(button));
     const flap = document.createElement('span');
     flap.className = 'flap';
     button.append(flap);
@@ -215,6 +224,7 @@ function render() {
   $('light-label').textContent = light === 'day' ? word.day : word.night;
   $('music').setAttribute('aria-pressed', String(musicOn));
   $('music-label').textContent = musicOn ? word.music : word.off;
+  $('music-credit').hidden = !musicOn;
   $('lang').textContent = language === 'sv' ? 'EN' : 'SV';
   $('lang').setAttribute('lang', language === 'sv' ? 'en' : 'sv');
   $('lang').setAttribute('aria-label', word.switchLanguage);
@@ -231,12 +241,15 @@ function render() {
   $('share-email').textContent = word.email;
   $('cv').href = language === 'sv' ? 'https://voltura.se/?lang=sv' : 'https://voltura.se/';
   document.querySelector('.controls').setAttribute('aria-label', word.settings);
-  $('feedback').textContent = typeof feedback === 'number' ? word.locked(feedback) : word[feedback] ?? '';
+  $('feedback').textContent = typeof feedback === 'number'
+    ? (isAvailable(feedback) ? '' : waitLabel(feedback))
+    : word[feedback] ?? '';
   for (const [day, { door, button, flap, image }] of doors) {
     const available = isAvailable(day);
     const project = projectImages.get(day);
     const visible = isOpen(day) && project;
     door.classList.toggle('available', available);
+    if (available) hideDoorTooltip(button);
     if (!door.classList.contains('closing')) door.classList.toggle('open', Boolean(visible));
     button.setAttribute('aria-label', visible ? word.shut(day) : word.door(day) + ', ' + (available ? word.ready : word.locked(day)));
     if (flap.dataset.status !== String(available)) {
@@ -393,8 +406,11 @@ async function closeDoor(day) {
 async function openDoor(day) {
   if (busy || ringing || isOpen(day)) return;
   if (!isAvailable(day)) {
+    const { button } = doors.get(day);
     feedback = day;
     render();
+    showDoorTooltip(button, waitLabel(day));
+    tooltipTimer = setTimeout(() => hideDoorTooltip(button), 4200);
     return;
   }
   busy = true;
@@ -504,6 +520,7 @@ $('music').addEventListener('click', () => {
   render();
 });
 $('lang').addEventListener('click', () => {
+  hideDoorTooltip();
   language = language === 'sv' ? 'en' : 'sv';
   save(local, key + 'language', language);
   updateOption('language', language);

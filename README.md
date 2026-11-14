@@ -13,3 +13,5 @@ With Node.js 22 or later, run `npm run dev` and open `http://127.0.0.1:4173/`. R
 Project start years use the earliest documented work. WeekNumber, HardTop, and Earner use the years of the original repositories. The store years follow their first documented collections, and the CV entry uses the year of the current website.
 
 The software is [MIT licensed](LICENSE). Instrument Sans is distributed under its [font license](public/assets/instrument-sans-OFL.txt).
+
+Music is [JingleBells_Piano.wav by jess_pfohl](https://freesound.org/people/jess_pfohl/sounds/219327/), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The calendar uses an excerpt edited for looping and encoded as MP3.

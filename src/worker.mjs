@@ -24,7 +24,7 @@ const sharePreviews = {
 };
 const types = {
   html: 'text/html; charset=utf-8', css: 'text/css; charset=utf-8', js: 'text/javascript; charset=utf-8',
-  jpg: 'image/jpeg', png: 'image/png', ico: 'image/x-icon', webp: 'image/webp', woff2: 'font/woff2', svg: 'image/svg+xml', mp4: 'video/mp4',
+  jpg: 'image/jpeg', png: 'image/png', ico: 'image/x-icon', webp: 'image/webp', woff2: 'font/woff2', svg: 'image/svg+xml', mp3: 'audio/mpeg', mp4: 'video/mp4',
 };
 const json = (data, status = 200) => Response.json(data, {
   status, headers: { 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff' },
@@ -93,7 +93,7 @@ export function createHandler(clock = Date.now) {
     if (request.method !== 'GET' && request.method !== 'HEAD') return json({ error: 'method' }, 405);
     const head = request.method === 'HEAD';
     if (path === '/' || path === '/index.html') return calendarPage(url.searchParams.get('language'), head);
-    return asset(path === '/favicon.ico' ? '/assets/favicon.ico' : path, false, head);
+    return asset(path === '/favicon.ico' ? '/assets/favicon.ico' : path, false, head, request.headers.get('Range'));
   };
 }
 
@@ -137,15 +137,35 @@ function calendarPage(requestedLanguage, head) {
   } });
 }
 
-function asset(path, privateAsset, head = false) {
+function asset(path, privateAsset, head = false, range = null) {
   if (!Object.hasOwn(files, path)) return json({ error: 'not-found' }, 404);
+  const type = types[path.split('.').at(-1)] ?? 'application/octet-stream';
   const blob = head ? null : Uint8Array.from(atob(files[path]), c => c.charCodeAt(0));
-  return new Response(blob, { headers: {
-    'Content-Type': types[path.split('.').at(-1)] ?? 'application/octet-stream',
+  const headers = {
+    'Content-Type': type,
     'Cache-Control': privateAsset ? 'private, no-store' : path.startsWith('/assets/') ? 'public, max-age=3600' : 'no-cache',
     'X-Content-Type-Options': 'nosniff',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
-  } });
+  };
+  if (type !== 'audio/mpeg') return new Response(blob, { headers });
+
+  const data = files[path];
+  const length = data.length * 3 / 4 - (data.endsWith('==') ? 2 : data.endsWith('=') ? 1 : 0);
+  headers['Accept-Ranges'] = 'bytes';
+  headers['Content-Length'] = String(length);
+  const bounds = !head && range?.match(/^bytes=(\d*)-(\d*)$/);
+  if (!bounds || (!bounds[1] && !bounds[2])) return new Response(blob, { headers });
+
+  const start = bounds[1] ? Number(bounds[1]) : Math.max(0, length - Number(bounds[2]));
+  const end = bounds[1] && bounds[2] ? Math.min(Number(bounds[2]), length - 1) : length - 1;
+  if (start >= length || start > end) {
+    delete headers['Content-Length'];
+    headers['Content-Range'] = 'bytes */' + length;
+    return new Response(null, { status: 416, headers });
+  }
+  headers['Content-Range'] = 'bytes ' + start + '-' + end + '/' + length;
+  headers['Content-Length'] = String(end - start + 1);
+  return new Response(blob.subarray(start, end + 1), { status: 206, headers });
 }
 
 export default { fetch: createHandler() };
