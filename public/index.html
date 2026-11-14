@@ -6,7 +6,10 @@
   <meta name="theme-color" content="#101c2b">
   <meta name="description" content="24 luckor, 24 Voltura-projekt och en svensk jul i väntan på julafton.">
   <title>Voltura Julkalender</title>
-  <link rel="icon" href="/assets/star.svg" type="image/svg+xml">
+  <!-- social-preview -->
+  <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
+  <link rel="icon" href="/assets/favicon.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" sizes="180x180">
   <link rel="stylesheet" href="/style.css">
   <script type="module" src="/calendar.js"></script>
 </head>
@@ -58,6 +61,7 @@
     <div class="reveal-inner">
       <p id="reveal-date" class="reveal-date"></p>
       <h2 id="reveal-title"></h2>
+      <p class="reveal-start"><span id="reveal-start-label"></span><time id="reveal-start-year"></time></p>
       <div id="reveal-media"></div>
       <p id="reveal-note"></p>
       <p id="reveal-description"></p>

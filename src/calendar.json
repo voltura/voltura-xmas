@@ -2,6 +2,7 @@
   {
     "day": 1,
     "title": "Voltura Ord",
+    "started": 2026,
     "description": {
       "sv": "Ett svenskt ordspel för två.",
       "en": "A Swedish word game for two."
@@ -16,6 +17,7 @@
   {
     "day": 2,
     "title": "Voltura Text Clock",
+    "started": 2020,
     "description": {
       "sv": "Se vad klockan är, uttryckt i ord.",
       "en": "See the time spelled out in words."
@@ -30,6 +32,7 @@
   {
     "day": 3,
     "title": "Voltura Markdown",
+    "started": 2026,
     "description": {
       "sv": "Läs och redigera Markdown med direkt förhandsvisning.",
       "en": "Read and edit Markdown with a live preview."
@@ -44,6 +47,7 @@
   {
     "day": 4,
     "title": "QuickFolders",
+    "started": 2025,
     "description": {
       "sv": "Genvägar till mappar du nyligen har använt.",
       "en": "Shortcuts to recently used folders."
@@ -58,6 +62,7 @@
   {
     "day": 5,
     "title": "Voltura Places",
+    "started": 2026,
     "description": {
       "sv": "Spara platser och hitta tillbaka, även offline.",
       "en": "Save places and find your way back, even offline."
@@ -72,6 +77,7 @@
   {
     "day": 6,
     "title": "Mint & Motif",
+    "started": 2026,
     "description": {
       "sv": "Naturinspirerade mönster och illustrationer för egna skapelser.",
       "en": "Nature-inspired patterns and illustrations for your own creations."
@@ -86,6 +92,7 @@
   {
     "day": 7,
     "title": "Voltura NetOn",
+    "started": 2026,
     "description": {
       "sv": "Slå av och på nätverkskort direkt från Windows.",
       "en": "Toggle network adapters directly from Windows."
@@ -100,6 +107,7 @@
   {
     "day": 8,
     "title": "Voltura HardTop",
+    "started": 2021,
     "description": {
       "sv": "Håll viktiga fönster ovanpå de andra.",
       "en": "Keep important windows above the rest."
@@ -115,6 +123,7 @@
   {
     "day": 9,
     "title": "Voltura Download Watcher",
+    "started": 2026,
     "description": {
       "sv": "Följ nya filer i din hämtningsmapp.",
       "en": "Keep an eye on new files in your downloads folder."
@@ -129,6 +138,7 @@
   {
     "day": 10,
     "title": "Voltura Earner",
+    "started": 2022,
     "description": {
       "sv": "Följ arbetstid, övertid och intäkter i Windows.",
       "en": "Track working hours, overtime and earnings on Windows."
@@ -143,6 +153,7 @@
   {
     "day": 11,
     "title": "IMDb Poster Browser",
+    "started": 2026,
     "description": {
       "sv": "Upptäck filmografier som en vägg av filmaffischer.",
       "en": "Explore filmographies as a wall of movie posters."
@@ -158,6 +169,7 @@
   {
     "day": 12,
     "title": "Voltura Reel Player",
+    "started": 2026,
     "description": {
       "sv": "Spela Facebook Reels i helskärm och titta närmare på detaljer.",
       "en": "Play Facebook Reels fullscreen and take a closer look at details."
@@ -173,6 +185,7 @@
   {
     "day": 13,
     "title": "Voltura Music",
+    "started": 2026,
     "description": {
       "sv": "Utforska radiostationer från hela världen med en klassisk radio.",
       "en": "Explore radio stations from around the world with a retro radio."
@@ -187,6 +200,7 @@
   {
     "day": 14,
     "title": "Fortnox Submitter",
+    "started": 2024,
     "description": {
       "sv": "Skicka underlag till Fortnox via webben.",
       "en": "Submit documents to Fortnox from the web."
@@ -201,6 +215,7 @@
   {
     "day": 15,
     "title": "Voltura WeekNumber",
+    "started": 2021,
     "description": {
       "sv": "Ha veckonumret nära till hands i aktivitetsfältet.",
       "en": "Keep the week number handy in the Windows notification area."
@@ -215,6 +230,7 @@
   {
     "day": 16,
     "title": "Steel & Motion",
+    "started": 2026,
     "description": {
       "sv": "Detaljrika illustrationer av maskiner, verktyg och instrument.",
       "en": "Detailed illustrations inspired by machines, tools and instruments."
@@ -229,6 +245,7 @@
   {
     "day": 17,
     "title": "Monks’ Numbering System",
+    "started": 2023,
     "description": {
       "sv": "Utforska cisterciensermunkarnas sätt att skriva tal.",
       "en": "Explore how Cistercian monks wrote numbers."
@@ -243,6 +260,7 @@
   {
     "day": 18,
     "title": "Voltura AI Watcher",
+    "started": 2026,
     "description": {
       "sv": "En liten Windows-app för att hålla koll på Codex-aktivitet.",
       "en": "A small Windows app for keeping an eye on Codex activity."
@@ -257,6 +275,7 @@
   {
     "day": 19,
     "title": "Voltura Vault",
+    "started": 2026,
     "description": {
       "sv": "En lösenordshanterare med kryptering på din enhet och en server du själv driver.",
       "en": "A password manager with encryption on your device and a server you run yourself."
@@ -271,6 +290,7 @@
   {
     "day": 20,
     "title": "Voltura Books",
+    "started": 2026,
     "description": {
       "sv": "Bläddra bland böcker, läs dokument och skicka böcker till Kindle.",
       "en": "Browse books, read documents and send books to Kindle."
@@ -285,6 +305,7 @@
   {
     "day": 21,
     "title": "Voltura AB / Joakim Skoglund",
+    "started": 2026,
     "description": {
       "sv": "Träffa utvecklaren bakom kalendern och läs om hans arbete.",
       "en": "Meet the developer behind the calendar and explore his work."
@@ -302,6 +323,7 @@
   {
     "day": 22,
     "title": "Voltura Projects",
+    "started": 2026,
     "description": {
       "sv": "Bläddra bland Volturas appar, verktyg och öppna projekt.",
       "en": "Browse Voltura’s apps, tools and open projects."
@@ -316,6 +338,7 @@
   {
     "day": 23,
     "title": "Voltura Air",
+    "started": 2026,
     "description": {
       "sv": "Använd mobilen som fjärrkontroll eller webbkamera till Windows.",
       "en": "Use your phone as a remote or webcam for Windows."
@@ -331,6 +354,7 @@
   {
     "day": 24,
     "title": "Voltura Worlds",
+    "started": 2026,
     "description": {
       "sv": "Ta med det svenska vinterlandskapet till ditt Windows-skrivbord.",
       "en": "Bring the Swedish winter landscape to your Windows desktop."

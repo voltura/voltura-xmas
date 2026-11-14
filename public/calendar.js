@@ -9,7 +9,7 @@ const text = {
     bell: 'Julbjällra', found: 'Du hittade den hemliga julbjällran! Nu kan du öppna alla 24 luckor.',
     relocked: 'Kommande luckor är stängda och låsta igen.',
     error: 'Det gick inte att öppna just nu. Försök igen.', close: 'Stäng', skip: 'Hoppa över',
-    visit: 'Besök projektet', settings: 'Inställningar', switchLanguage: 'Switch to English', merry: 'God jul!',
+    visit: 'Besök projektet', started: 'Startat', settings: 'Inställningar', switchLanguage: 'Switch to English', merry: 'God jul!',
     before: 'Första luckan öppnas den 1 december.',
     share: 'Dela julkalendern', shareLink: 'Länk till julkalendern', copy: 'Kopiera länk',
     copied: 'Länken kopierades.', copyHelp: 'Markera och kopiera länken ovan.', email: 'E-post',
@@ -21,7 +21,7 @@ const text = {
     bell: 'Christmas bell', found: 'You found the hidden Christmas bell! All 24 doors are now yours to open.',
     relocked: 'Future doors are closed and locked again.',
     error: 'That could not be opened right now. Try again.', close: 'Close', skip: 'Skip',
-    visit: 'Visit project', settings: 'Settings', switchLanguage: 'Byt till svenska', merry: 'Merry Christmas!',
+    visit: 'Visit project', started: 'Started', settings: 'Settings', switchLanguage: 'Byt till svenska', merry: 'Merry Christmas!',
     before: 'The first door opens on December 1.',
     share: 'Share calendar', shareLink: 'Calendar link', copy: 'Copy link',
     copied: 'Link copied.', copyHelp: 'Select and copy the link above.', email: 'Email',
@@ -65,15 +65,37 @@ const daySet = (store, name) => {
   return new Set(Array.isArray(days) ? days.filter(n => Number.isInteger(n) && n >= 1 && n <= 24) : []);
 };
 const opened = daySet(local, 'opened');
+function syncOpenedDoors() {
+  for (const day of doors.keys()) {
+    const saved = read(local, key + 'opened-' + day, null);
+    if (saved === true) opened.add(day);
+    else if (saved === false) opened.delete(day);
+  }
+}
+function setOpened(day, isOpened) {
+  if (isOpened) opened.add(day);
+  else opened.delete(day);
+  save(local, key + 'opened-' + day, isOpened);
+}
 const early = daySet(session, 'early');
+function promoteEarlyDoors() {
+  for (const day of early) {
+    if (day > state.available) continue;
+    if (read(local, key + 'opened-' + day, null) === null) setOpened(day, true);
+    early.delete(day);
+  }
+  save(session, key + 'early', [...early]);
+}
 let active = null;
 let busy = false;
 let ringing = false;
 let musicOn = initialOptions.get('music') === 'on';
 let stopClip = () => {};
+let presentationRequest = null;
 let feedback = '';
 let lastDoor = null;
 let tooltipAnchor = null;
+let touchPreview = null;
 let sharing = false;
 const t = () => text[language];
 const isAvailable = day => day <= state.available || state.unlocked;
@@ -96,6 +118,7 @@ function padlock(open) {
 function hideDoorTooltip(anchor = tooltipAnchor) {
   if (!anchor || anchor !== tooltipAnchor) return;
   anchor.removeAttribute('aria-describedby');
+  if (touchPreview === anchor) touchPreview = null;
   tooltipAnchor = null;
   doorTooltip.hidden = true;
 }
@@ -137,9 +160,24 @@ function setupDoors() {
     image.addEventListener('pointerleave', () => {
       if (document.activeElement !== image) hideDoorTooltip(image);
     });
-    image.addEventListener('focus', () => showDoorTooltip(image, projectImages.get(day)));
+    let touched = false;
+    image.addEventListener('pointerdown', event => {
+      touched = event.pointerType === 'touch';
+    });
+    image.addEventListener('focus', () => {
+      if (!touched) showDoorTooltip(image, projectImages.get(day));
+    });
     image.addEventListener('blur', () => hideDoorTooltip(image));
-    image.addEventListener('click', () => hideDoorTooltip(image));
+    image.addEventListener('click', event => {
+      if (touched && event.detail !== 0 && touchPreview !== image) {
+        event.preventDefault();
+        showDoorTooltip(image, projectImages.get(day));
+        touchPreview = image;
+      } else {
+        hideDoorTooltip(image);
+      }
+      touched = false;
+    });
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'door-button';
@@ -204,7 +242,10 @@ function render() {
       flap.dataset.status = String(available);
       flap.innerHTML = '<span>' + day + '</span>' + padlock(available);
     }
-    if (!door.classList.contains('closing')) image.hidden = !visible;
+    if (!door.classList.contains('closing')) {
+      image.hidden = !visible;
+      if (image.hidden) hideDoorTooltip(image);
+    }
     if (visible) {
       image.href = urlFor(project);
       image.setAttribute('aria-label', word.door(day) + ', ' + project.title);
@@ -242,8 +283,8 @@ async function refresh() {
       token = '';
       save(session, key + 'bell', '');
     }
-    for (const day of early) if (day <= state.available) opened.add(day);
-    save(local, key + 'opened', [...opened]);
+    syncOpenedDoors();
+    promoteEarlyDoors();
     render();
     await Promise.allSettled([...new Set([...opened, ...early])].filter(isOpen).map(loadProject));
     render();
@@ -254,9 +295,16 @@ async function refresh() {
 }
 
 async function presentation(project, day) {
+  presentationRequest?.abort();
+  const request = new AbortController();
+  presentationRequest = request;
+  const stillShowing = () => presentationRequest === request && reveal.open;
   const word = t();
   $('reveal-date').textContent = dateLabel(day) + (day === 24 ? ' · ' + word.merry : '');
   $('reveal-title').textContent = project.title;
+  $('reveal-start-label').textContent = word.started + ' ';
+  $('reveal-start-year').dateTime = project.started.toString();
+  $('reveal-start-year').textContent = project.started;
   $('reveal-note').textContent = project.note[language];
   $('reveal-description').textContent = project.description[language];
   $('project-link').textContent = word.visit + ' ↗';
@@ -266,6 +314,7 @@ async function presentation(project, day) {
   image.alt = project.title;
   image.src = project.thumbnail;
   const promo = () => {
+    if (!stillShowing()) return;
     stopClip();
     media.replaceChildren(image);
     $('reveal-description').hidden = false;
@@ -282,15 +331,18 @@ async function presentation(project, day) {
   video.poster = project.thumbnail;
   let videoUrl = project.video;
   if (videoUrl.startsWith('/')) {
+    media.replaceChildren(image);
+    $('reveal-description').hidden = false;
+    $('project-link').hidden = false;
     try {
-      const response = await fetch(videoUrl, { headers: auth() });
+      const response = await fetch(videoUrl, { headers: auth(), signal: request.signal });
       if (!response.ok) throw new Error('Preview unavailable');
       videoUrl = URL.createObjectURL(await response.blob());
     } catch {
-      if (reveal.open) promo();
+      promo();
       return;
     }
-    if (!reveal.open || active?.day !== day) {
+    if (!stillShowing()) {
       URL.revokeObjectURL(videoUrl);
       return;
     }
@@ -332,9 +384,8 @@ async function closeDoor(day) {
   hideDoorTooltip(image);
   door.classList.add('closing');
   door.classList.remove('open');
-  opened.delete(day);
+  if (day <= state.available) setOpened(day, false);
   early.delete(day);
-  save(local, key + 'opened', [...opened]);
   save(session, key + 'early', [...early]);
   await waitForFlap(flap);
   door.classList.remove('closing');
@@ -354,8 +405,11 @@ async function openDoor(day) {
   try {
     const project = await loadProject(day);
     const normal = day <= state.available;
-    (normal ? opened : early).add(day);
-    save(normal ? local : session, key + (normal ? 'opened' : 'early'), [...(normal ? opened : early)]);
+    if (normal) setOpened(day, true);
+    else {
+      early.add(day);
+      save(session, key + 'early', [...early]);
+    }
     feedback = '';
     render();
     const { flap, image } = doors.get(day);
@@ -401,11 +455,10 @@ $('bell').addEventListener('click', async () => {
         door.classList.add('closing');
         door.classList.remove('open');
       }
-      for (const day of early) if (day <= state.available) opened.add(day);
+      promoteEarlyDoors();
       early.clear();
       token = '';
       state.unlocked = false;
-      save(local, key + 'opened', [...opened]);
       save(session, key + 'early', []);
       save(session, key + 'bell', '');
       feedback = 'relocked';
@@ -504,6 +557,8 @@ $('share-copy').addEventListener('click', async () => {
 });
 $('close').addEventListener('click', () => reveal.close());
 reveal.addEventListener('close', () => {
+  presentationRequest?.abort();
+  presentationRequest = null;
   stopClip();
   active = null;
   $('reveal-media').replaceChildren();
@@ -512,12 +567,19 @@ reveal.addEventListener('close', () => {
 addEventListener('visibilitychange', () => {
   if (!document.hidden) void refresh();
 });
+addEventListener('storage', event => {
+  if (!event.key?.startsWith(key + 'opened-')) return;
+  syncOpenedDoors();
+  render();
+  void refresh();
+});
 addEventListener('scroll', () => hideDoorTooltip(), { passive: true });
 addEventListener('resize', () => hideDoorTooltip());
 addEventListener('keydown', event => {
   if (event.key === 'Escape') hideDoorTooltip();
 });
 setupDoors();
+syncOpenedDoors();
 render();
 if (musicOn) {
   document.addEventListener('click', startRequestedMusic, true);
