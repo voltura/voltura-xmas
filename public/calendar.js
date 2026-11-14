@@ -11,6 +11,8 @@ const text = {
     error: 'Det gick inte att öppna just nu. Försök igen.', close: 'Stäng', skip: 'Hoppa över',
     visit: 'Besök projektet', settings: 'Inställningar', switchLanguage: 'Switch to English', merry: 'God jul!',
     before: 'Första luckan öppnas den 1 december.',
+    share: 'Dela julkalendern', shareLink: 'Länk till julkalendern', copy: 'Kopiera länk',
+    copied: 'Länken kopierades.', copyHelp: 'Markera och kopiera länken ovan.', email: 'E-post',
   },
   en: {
     title: 'Christmas Calendar', month: 'December', night: 'Night', day: 'Day', music: 'Music', off: 'Music off',
@@ -21,6 +23,8 @@ const text = {
     error: 'That could not be opened right now. Try again.', close: 'Close', skip: 'Skip',
     visit: 'Visit project', settings: 'Settings', switchLanguage: 'Byt till svenska', merry: 'Merry Christmas!',
     before: 'The first door opens on December 1.',
+    share: 'Share calendar', shareLink: 'Calendar link', copy: 'Copy link',
+    copied: 'Link copied.', copyHelp: 'Select and copy the link above.', email: 'Email',
   },
 };
 const positions = [
@@ -46,8 +50,14 @@ const save = (store, key, value) => {
 const local = 'localStorage';
 const session = 'sessionStorage';
 const key = 'julkalender-2026-';
-let language = read(local, key + 'language', 'sv') === 'en' ? 'en' : 'sv';
-let light = read(local, key + 'light', 'night') === 'day' ? 'day' : 'night';
+const initialOptions = new URLSearchParams(location.search);
+const requestedLanguage = initialOptions.get('language');
+let language = Object.hasOwn(text, requestedLanguage)
+  ? requestedLanguage
+  : read(local, key + 'language', 'sv') === 'en' ? 'en' : 'sv';
+const requestedNight = initialOptions.get('night');
+let light = requestedNight === 'on' ? 'night' : requestedNight === 'off' ? 'day' :
+  read(local, key + 'light', 'night') === 'day' ? 'day' : 'night';
 let token = read(session, key + 'bell', '');
 let state = { available: 0, remaining: null, unlocked: false };
 const daySet = (store, name) => {
@@ -59,17 +69,24 @@ const early = daySet(session, 'early');
 let active = null;
 let busy = false;
 let ringing = false;
-let musicOn = false;
+let musicOn = initialOptions.get('music') === 'on';
 let stopClip = () => {};
 let feedback = '';
 let lastDoor = null;
 let tooltipAnchor = null;
+let sharing = false;
 const t = () => text[language];
 const isAvailable = day => day <= state.available || state.unlocked;
 const isOpen = day => isAvailable(day) && (opened.has(day) || early.has(day));
 const auth = () => token ? { Authorization: 'Bearer ' + token } : {};
 const dateLabel = day => language === 'sv' ? day + ' december' : 'December ' + day;
 const urlFor = project => project.urlByLanguage?.[language] ?? project.url;
+
+function updateOption(option, value) {
+  const url = new URL(location.href);
+  url.searchParams.set(option, value);
+  history.replaceState(history.state, '', url);
+}
 
 function padlock(open) {
   return '<svg class="padlock" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="4" y="9" width="12" height="9" rx="2"/><path d="' +
@@ -144,6 +161,12 @@ function render() {
   document.documentElement.lang = language;
   document.documentElement.dataset.light = light;
   document.title = 'Voltura ' + word.title;
+  const brand = document.querySelector('.brand');
+  brand.setAttribute('aria-label', document.title);
+  const home = new URL('/', location.origin);
+  home.search = location.search;
+  home.searchParams.set('language', language);
+  brand.href = home.href;
   $('title').textContent = word.title;
   $('month').textContent = word.month.toUpperCase();
   $('countdown').textContent = state.remaining === null ? '' : word.countdown(state.remaining);
@@ -159,6 +182,14 @@ function render() {
   $('bell').setAttribute('aria-label', word.bell);
   $('bell').setAttribute('aria-pressed', String(state.unlocked));
   $('close').setAttribute('aria-label', word.close);
+  $('share-header').setAttribute('aria-label', word.share);
+  $('share-header').title = word.share;
+  $('share-footer').textContent = word.share;
+  $('share-title').textContent = word.share;
+  $('share-close').setAttribute('aria-label', word.close);
+  $('share-link').setAttribute('aria-label', word.shareLink);
+  $('share-copy').textContent = word.copy;
+  $('share-email').textContent = word.email;
   $('cv').href = language === 'sv' ? 'https://voltura.se/?lang=sv' : 'https://voltura.se/';
   document.querySelector('.controls').setAttribute('aria-label', word.settings);
   $('feedback').textContent = typeof feedback === 'number' ? word.locked(feedback) : word[feedback] ?? '';
@@ -401,21 +432,74 @@ $('bell').addEventListener('click', async () => {
 $('light').addEventListener('click', () => {
   light = light === 'day' ? 'night' : 'day';
   save(local, key + 'light', light);
+  updateOption('night', light === 'night' ? 'on' : 'off');
   render();
 });
-$('music').addEventListener('click', async () => {
+const startRequestedMusic = event => {
+  if (!musicOn || event.target.closest?.('#music')) return;
+  removeMusicStartListeners();
+  void music.resume();
+};
+function removeMusicStartListeners() {
+  document.removeEventListener('click', startRequestedMusic, true);
+  document.removeEventListener('keydown', startRequestedMusic, true);
+}
+$('music').addEventListener('click', () => {
+  removeMusicStartListeners();
   musicOn = !musicOn;
-  if (musicOn) musicOn = await music.resume();
+  if (musicOn) void music.resume();
   else music.suspend();
+  updateOption('music', musicOn ? 'on' : 'off');
   render();
 });
 $('lang').addEventListener('click', () => {
   language = language === 'sv' ? 'en' : 'sv';
   save(local, key + 'language', language);
+  updateOption('language', language);
   render();
   if (active) {
     stopClip();
     void presentation(active.project, active.day);
+  }
+});
+async function shareCalendar() {
+  const dialog = $('share-dialog');
+  if (sharing || dialog.open) return;
+  const url = new URL('https://x-mas.voltura.se/');
+  url.search = new URLSearchParams({
+    language,
+    night: light === 'night' ? 'on' : 'off',
+    music: musicOn ? 'on' : 'off',
+  });
+  const title = document.title;
+  const data = { title, url: url.href };
+  sharing = true;
+  try {
+    if (typeof navigator.share === 'function' && (!navigator.canShare || navigator.canShare(data))) {
+      await navigator.share(data);
+      return;
+    }
+  } catch (error) {
+    if (error.name === 'AbortError') return;
+  } finally {
+    sharing = false;
+  }
+  $('share-link').value = url.href;
+  $('share-email').href = 'mailto:?subject=' + encodeURIComponent(title) + '&body=' + encodeURIComponent(url.href);
+  $('share-result').textContent = '';
+  dialog.showModal();
+}
+$('share-header').addEventListener('click', () => void shareCalendar());
+$('share-footer').addEventListener('click', () => void shareCalendar());
+$('share-copy').addEventListener('click', async () => {
+  const input = $('share-link');
+  try {
+    await navigator.clipboard.writeText(input.value);
+    $('share-result').textContent = t().copied;
+  } catch {
+    input.focus();
+    input.select();
+    $('share-result').textContent = t().copyHelp;
   }
 });
 $('close').addEventListener('click', () => reveal.close());
@@ -435,5 +519,10 @@ addEventListener('keydown', event => {
 });
 setupDoors();
 render();
+if (musicOn) {
+  document.addEventListener('click', startRequestedMusic, true);
+  document.addEventListener('keydown', startRequestedMusic, true);
+  void music.resume();
+}
 void refresh();
 setInterval(() => { if (!document.hidden) void refresh(); }, 30_000);

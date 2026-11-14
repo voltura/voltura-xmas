@@ -18,6 +18,9 @@
       <button id="light" type="button" aria-pressed="false"><span aria-hidden="true">☾</span> <span id="light-label">Natt</span></button>
       <button id="music" type="button" aria-pressed="false"><span aria-hidden="true">♫</span> <span id="music-label">Musik av</span></button>
       <button id="lang" type="button" lang="en" aria-label="Switch to English">EN</button>
+      <button class="share-button" id="share-header" type="button" aria-label="Dela julkalendern">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.5 6.8-4m-6.8 7 6.8 4"/></svg>
+      </button>
     </nav>
   </header>
   <main>
@@ -44,6 +47,7 @@
     </div>
   </main>
   <footer>
+    <button class="share-footer" id="share-footer" type="button">Dela julkalendern</button>
     <a id="cv" href="https://voltura.se/?lang=sv">Voltura AB / CV</a>
     <a href="https://www.linkedin.com/in/joakim-voltura/">LinkedIn</a>
     <a href="https://github.com/voltura">GitHub</a>
@@ -59,6 +63,18 @@
       <p id="reveal-description"></p>
       <a id="project-link" class="project-link" target="_blank" rel="noopener"></a>
     </div>
+  </dialog>
+  <dialog id="share-dialog" aria-labelledby="share-title">
+    <form method="dialog" class="reveal-inner">
+      <button id="share-close" class="close" type="submit" aria-label="Stäng">×</button>
+      <h2 id="share-title">Dela julkalendern</h2>
+      <input id="share-link" type="url" readonly aria-label="Länk till julkalendern">
+      <div class="share-actions">
+        <button id="share-copy" class="project-link" type="button" autofocus>Kopiera länk</button>
+        <a id="share-email" href="mailto:">E-post</a>
+      </div>
+      <p id="share-result" role="status"></p>
+    </form>
   </dialog>
   <noscript>Aktivera JavaScript för att kunna öppna luckorna. Enable JavaScript to open the doors.</noscript>
 </body>
