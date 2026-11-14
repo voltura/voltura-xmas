@@ -6,8 +6,10 @@ export function weather(canvas, background, board) {
     x: 0, y: 0, width: 0, height: 0,
     flakes: Array.from({ length: count }, () => ({
       x: Math.random(), y: Math.random(), speed: 10 + Math.random() * 23,
-      radius: 1.1 + Math.random() ** 1.6 * 4.3, phase: Math.random() * 6,
-      spin: (Math.random() - .5) * .46, tone: Math.random(), alpha: .46 + Math.random() * .42,
+      radius: 2.4 + Math.random() ** 1.6 * 5, phase: Math.random() * 6,
+      angle: Math.random() * 2 * Math.PI, turnTime: 8 + Math.random() * 6,
+      direction: Math.random() < .5 ? -1 : 1,
+      tone: Math.random(), alpha: .46 + Math.random() * .42,
     })),
   }));
   const bulbs = [
@@ -57,15 +59,16 @@ export function weather(canvas, background, board) {
       const bearing = angle + arm * Math.PI / 3;
       const dx = Math.cos(bearing);
       const dy = Math.sin(bearing);
+      const length = radius * (arm === 0 ? 1 : arm === 3 ? .72 : .83);
       snow.moveTo(x, y);
-      snow.lineTo(x + dx * radius, y + dy * radius);
-      if (radius >= 3) {
-        const branchX = x + dx * radius * .62;
-        const branchY = y + dy * radius * .62;
+      snow.lineTo(x + dx * length, y + dy * length);
+      if (radius >= 3.4) {
+        const branchX = x + dx * length * .62;
+        const branchY = y + dy * length * .62;
         for (const side of [-1, 1]) {
           snow.moveTo(branchX, branchY);
-          snow.lineTo(branchX + (dx * .18 - dy * side * .24) * radius,
-            branchY + (dy * .18 + dx * side * .24) * radius);
+          snow.lineTo(branchX + (dx * .18 - dy * side * .24) * length,
+            branchY + (dy * .18 + dx * side * .24) * length);
         }
       }
     }
@@ -88,7 +91,8 @@ export function weather(canvas, background, board) {
         snow.strokeStyle = 'rgb(' + gray + ',' + (gray + 2) + ',' + (gray + 5) + ')';
         snow.lineWidth = flake.radius < 2.5 ? 1.15 : 1.45;
         snow.lineCap = 'round';
-        snowCrystal(px, py, flake.radius, flake.phase + time * flake.spin);
+        const angle = flake.angle + flake.direction * time * 2 * Math.PI / flake.turnTime;
+        snowCrystal(px, py, flake.radius, angle);
       }
     }
     snow.globalAlpha = 1;
