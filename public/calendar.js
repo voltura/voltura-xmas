@@ -34,6 +34,7 @@ const positions = [
   [89, 29], [63, 84], [89, 85], [36, 87], [7, 55], [78, 25],
 ];
 const mobileOrder = [2, 13, 15, 9, 19, 7, 1, 11, 24, 3, 8, 6, 4, 23, 14, 12, 22, 10, 5, 16, 18, 20, 17, 21];
+const revealBorders = ['fir', 'woodcut', 'holly'];
 const doors = new Map();
 const projectImages = new Map();
 const card = $('picture');
@@ -415,6 +416,8 @@ async function openDoor(day) {
     active = { project, day };
     const target = lastDoor.getBoundingClientRect();
     hideDoorTooltip();
+    const borders = revealBorders.filter(border => border !== reveal.dataset.border);
+    reveal.dataset.border = borders[Math.floor(Math.random() * borders.length)];
     reveal.showModal();
     const box = reveal.getBoundingClientRect();
     reveal.animate([

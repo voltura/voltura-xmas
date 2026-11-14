@@ -110,12 +110,21 @@ h2{font-size:clamp(1.8rem,6vw,3rem);line-height:1;margin:.4rem 2rem 1rem 0;color
 #reveal-title{margin-bottom:.45rem}
 .reveal-start{margin:0 0 1rem;color:#754025;font-size:.86rem}
 .close{position:absolute;right:.7rem;top:.7rem;border:1px solid #b5926d;border-radius:50%;width:42px;height:42px;background:#f5e9d1;font-size:1.5rem;line-height:1}
-#reveal-media{position:relative;background:#182334;border-radius:8px;overflow:hidden}#reveal-media:empty{display:none}
+#reveal{--paper-day:url('/assets/reveal-fir-day.jpg');--paper-night:url('/assets/reveal-fir-night.jpg');--paper-art:var(--paper-day);--preview-line:#786044;--preview-red:#9b5647;--preview-green:#56664a;max-height:94dvh;border-radius:4px;background-image:var(--paper-art);background-size:100% 100%;background-attachment:local}
+#reveal[data-border=woodcut]{--paper-day:url('/assets/reveal-woodcut-day.jpg');--paper-night:url('/assets/reveal-woodcut-night.jpg')}
+#reveal[data-border=holly]{--paper-day:url('/assets/reveal-holly-day.jpg');--paper-night:url('/assets/reveal-holly-night.jpg')}
+#reveal .reveal-inner{padding:clamp(2.6rem,7vw,3.65rem) clamp(1.65rem,7vw,3.25rem) clamp(3.1rem,9vw,4.2rem)}
+#reveal[data-border=fir] .reveal-date{margin-left:.85rem}
+#reveal[data-border=woodcut] .reveal-inner{padding-bottom:clamp(4.6rem,12vw,5.9rem)}
+#reveal .close{top:.78rem;right:.78rem}
+#reveal-media{position:relative;background:#182334;border:1px solid var(--preview-line);border-radius:4px;overflow:hidden}
+#reveal-media:empty{display:none}
+#reveal-media::after{content:"";position:absolute;inset:0;border:1px solid transparent;border-image:linear-gradient(120deg,var(--preview-green),transparent 27% 73%,var(--preview-red)) 1;pointer-events:none}
 #reveal-media img,#reveal-media video{width:100%;max-height:40dvh;aspect-ratio:16/9;object-fit:contain;display:block}
 #reveal-note{color:#765038;font-family:Georgia,serif;font-style:italic}
 .project-link{display:inline-block;background:#722c2d;color:#fff4df;border-radius:5px;padding:.58rem .8rem;font-weight:600;text-decoration:none}
 .project-link:hover{filter:brightness(1.12)}
-[data-light=night] #reveal{background:#202b3d;color:#f8eddf;border-color:#826b56}
+[data-light=night] #reveal{--paper-art:var(--paper-night);--preview-line:#9b8060;--preview-red:#b77a6a;--preview-green:#819475;background-color:#202b3d;color:#f8eddf;border-color:#826b56}
 [data-light=night] #reveal-title{color:#fff0d7}
 [data-light=night] #reveal :is(.reveal-date,.reveal-start){color:#e9c58c}
 [data-light=night] #reveal-note{color:#e4cdb2}
