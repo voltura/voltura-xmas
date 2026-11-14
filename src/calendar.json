@@ -1,0 +1,342 @@
+[
+  {
+    "day": 1,
+    "title": "Ord",
+    "description": {
+      "sv": "Ett svenskt ordspel för två.",
+      "en": "A Swedish word game for two."
+    },
+    "url": "https://ord.voltura.se/",
+    "image": "ord",
+    "note": {
+      "sv": "Välkommen in i december. Sätt på något varmt och öppna den första luckan.",
+      "en": "Welcome to December. Put the kettle on and open the first door."
+    }
+  },
+  {
+    "day": 2,
+    "title": "Voltura Text Clock",
+    "description": {
+      "sv": "Se vad klockan är, uttryckt i ord.",
+      "en": "See the time spelled out in words."
+    },
+    "url": "https://textclock.voltura.se/",
+    "image": "clock",
+    "note": {
+      "sv": "Häng en stjärna i fönstret och låt den lysa för någon på väg hem.",
+      "en": "Hang a star in the window and let it shine for someone on their way home."
+    }
+  },
+  {
+    "day": 3,
+    "title": "Voltura Markdown",
+    "description": {
+      "sv": "Läs och redigera Markdown med direkt förhandsvisning.",
+      "en": "Read and edit Markdown with a live preview."
+    },
+    "url": "https://markdown.voltura.se/",
+    "image": "markdown",
+    "note": {
+      "sv": "En liten kvällspromenad räcker långt när snön har lagt sig.",
+      "en": "A short evening walk goes a long way when the snow has settled."
+    }
+  },
+  {
+    "day": 4,
+    "title": "QuickFolders",
+    "description": {
+      "sv": "Genvägar till mappar du nyligen har använt.",
+      "en": "Shortcuts to recently used folders."
+    },
+    "url": "https://voltura.github.io/QuickFolders/",
+    "image": "folders",
+    "note": {
+      "sv": "Skriv en julhälsning till någon du har tänkt på.",
+      "en": "Write a Christmas greeting to someone who’s been on your mind."
+    }
+  },
+  {
+    "day": 5,
+    "title": "Voltura Places",
+    "description": {
+      "sv": "Spara platser och hitta tillbaka, även offline.",
+      "en": "Save places and find your way back, even offline."
+    },
+    "url": "https://voltura.se/places/",
+    "image": "places",
+    "note": {
+      "sv": "Kanel och apelsin får köket att dofta jul.",
+      "en": "Cinnamon and orange make the kitchen smell like Christmas."
+    }
+  },
+  {
+    "day": 6,
+    "title": "Mint & Motif",
+    "description": {
+      "sv": "Naturinspirerade mönster och illustrationer för egna skapelser.",
+      "en": "Nature-inspired patterns and illustrations for your own creations."
+    },
+    "url": "https://payhip.com/mintandmotif",
+    "image": "mint",
+    "note": {
+      "sv": "Andra advent. Två ljus i staken och gärna något gott till fikat.",
+      "en": "The second Sunday of Advent. Two candles and something good with your coffee."
+    }
+  },
+  {
+    "day": 7,
+    "title": "Voltura NetOn",
+    "description": {
+      "sv": "Slå av och på nätverkskort direkt från Windows.",
+      "en": "Toggle network adapters directly from Windows."
+    },
+    "url": "https://neton.voltura.se/",
+    "image": "neton",
+    "note": {
+      "sv": "Tystnaden efter ett snöfall är värd att lyssna på.",
+      "en": "The quiet after a snowfall is worth listening to."
+    }
+  },
+  {
+    "day": 8,
+    "title": "Voltura HardTop",
+    "description": {
+      "sv": "Håll viktiga fönster ovanpå de andra.",
+      "en": "Keep important windows above the rest."
+    },
+    "url": "https://hardtop.voltura.se/",
+    "image": "hardtop",
+    "video": "https://hardtop.voltura.se/assets/demo.mp4",
+    "note": {
+      "sv": "En pappersstjärna kan börja med en bit vanligt papper.",
+      "en": "A paper star can start with a simple scrap of paper."
+    }
+  },
+  {
+    "day": 9,
+    "title": "Voltura Download Watcher",
+    "description": {
+      "sv": "Följ nya filer i din hämtningsmapp.",
+      "en": "Keep an eye on new files in your downloads folder."
+    },
+    "url": "https://voltura.github.io/voltura-download-watcher/",
+    "image": "download",
+    "note": {
+      "sv": "Låt en liten ljusslinga lysa upp årets mörka kvällar.",
+      "en": "Let a string of lights brighten the year’s dark evenings."
+    }
+  },
+  {
+    "day": 10,
+    "title": "Voltura Earner",
+    "description": {
+      "sv": "Följ arbetstid, övertid och intäkter i Windows.",
+      "en": "Track working hours, overtime and earnings on Windows."
+    },
+    "url": "https://earner.voltura.se/",
+    "image": "earner",
+    "note": {
+      "sv": "En snäll hälsning räcker som present en vanlig decemberdag.",
+      "en": "A kind message is gift enough on an ordinary December day."
+    }
+  },
+  {
+    "day": 11,
+    "title": "IMDb Poster Browser",
+    "description": {
+      "sv": "Upptäck filmografier som en vägg av filmaffischer.",
+      "en": "Explore filmographies as a wall of movie posters."
+    },
+    "url": "https://imdb.voltura.se/",
+    "image": "imdb",
+    "video": "https://imdb.voltura.se/store/promo/voltura-imdb-poster-browser-promo.mp4",
+    "note": {
+      "sv": "Ta fram en julbok, slå dig ner och läs några sidor.",
+      "en": "Find a Christmas book, settle in and read a few pages."
+    }
+  },
+  {
+    "day": 12,
+    "title": "Voltura Reel Player",
+    "description": {
+      "sv": "Spela Facebook Reels i helskärm och titta närmare på detaljer.",
+      "en": "Play Facebook Reels fullscreen and take a closer look at details."
+    },
+    "url": "https://reels.voltura.se/",
+    "image": "reels",
+    "video": "https://reels.voltura.se/media/voltura-reel-player.mp4",
+    "note": {
+      "sv": "Ikväll passar det fint att baka lussekatter till morgondagen.",
+      "en": "Tonight is a good time to bake saffron buns for tomorrow."
+    }
+  },
+  {
+    "day": 13,
+    "title": "Voltura Music",
+    "description": {
+      "sv": "Utforska radiostationer från hela världen med en klassisk radio.",
+      "en": "Explore radio stations from around the world with a retro radio."
+    },
+    "url": "https://music.voltura.se/",
+    "image": "music",
+    "note": {
+      "sv": "Lucia lyser upp morgonen med sång, ljus och saffransdoft.",
+      "en": "Lucia lights up the morning with songs, candles and the scent of saffron."
+    }
+  },
+  {
+    "day": 14,
+    "title": "Fortnox Submitter",
+    "description": {
+      "sv": "Skicka underlag till Fortnox via webben.",
+      "en": "Submit documents to Fortnox from the web."
+    },
+    "url": "https://voltura.se/fortnox/",
+    "image": "fortnox",
+    "note": {
+      "sv": "En kopp varm glögg gör sig fint efter en stund ute i kylan.",
+      "en": "A cup of warm mulled wine is lovely after some time out in the cold."
+    }
+  },
+  {
+    "day": 15,
+    "title": "Voltura WeekNumber",
+    "description": {
+      "sv": "Ha veckonumret nära till hands i aktivitetsfältet.",
+      "en": "Keep the week number handy in the Windows notification area."
+    },
+    "url": "https://weeknumber.voltura.se/",
+    "image": "weeknumber",
+    "note": {
+      "sv": "Lämna lite plats i veckan för en lugn stund.",
+      "en": "Leave a little room this week for a quiet moment."
+    }
+  },
+  {
+    "day": 16,
+    "title": "Steel & Motion",
+    "description": {
+      "sv": "Detaljrika illustrationer av maskiner, verktyg och instrument.",
+      "en": "Detailed illustrations inspired by machines, tools and instruments."
+    },
+    "url": "https://payhip.com/steelandmotion",
+    "image": "steel",
+    "note": {
+      "sv": "En grankvist på bordet tar in lite av vinterskogen.",
+      "en": "A fir branch on the table brings a little of the winter woods indoors."
+    }
+  },
+  {
+    "day": 17,
+    "title": "Monks’ Numbering System",
+    "description": {
+      "sv": "Utforska cisterciensermunkarnas sätt att skriva tal.",
+      "en": "Explore how Cistercian monks wrote numbers."
+    },
+    "url": "https://github.com/voltura/Monks-numbering-system",
+    "image": "monks",
+    "note": {
+      "sv": "Ibland är den finaste juldekorationen en man gjorde själv.",
+      "en": "Sometimes the loveliest Christmas decoration is one you made yourself."
+    }
+  },
+  {
+    "day": 18,
+    "title": "Voltura AI Watcher",
+    "description": {
+      "sv": "En liten Windows-app för att hålla koll på Codex-aktivitet.",
+      "en": "A small Windows app for keeping an eye on Codex activity."
+    },
+    "url": "https://voltura.github.io/voltura-ai-watcher/",
+    "image": "ai",
+    "note": {
+      "sv": "Om snön faller ikväll, stanna gärna vid fönstret en stund.",
+      "en": "If it snows tonight, linger by the window for a moment."
+    }
+  },
+  {
+    "day": 19,
+    "title": "Voltura Vault",
+    "description": {
+      "sv": "En lösenordshanterare med kryptering på din enhet och en server du själv driver.",
+      "en": "A password manager with encryption on your device and a server you run yourself."
+    },
+    "url": "https://voltura-vault.voltura.se/",
+    "image": "vault",
+    "note": {
+      "sv": "Ta fram en gammal julprydnad och minns när den kom hem till dig.",
+      "en": "Find an old Christmas ornament and remember how it found its way home to you."
+    }
+  },
+  {
+    "day": 20,
+    "title": "Voltura Books",
+    "description": {
+      "sv": "Bläddra bland böcker, läs dokument och skicka böcker till Kindle.",
+      "en": "Browse books, read documents and send books to Kindle."
+    },
+    "url": "https://books.voltura.se/",
+    "image": "books",
+    "note": {
+      "sv": "Fjärde advent. Nu lyser alla fyra ljusen.",
+      "en": "The fourth Sunday of Advent. All four candles are shining now."
+    }
+  },
+  {
+    "day": 21,
+    "title": "Voltura AB / Joakim Skoglund",
+    "description": {
+      "sv": "Träffa utvecklaren bakom kalendern och läs om hans arbete.",
+      "en": "Meet the developer behind the calendar and explore his work."
+    },
+    "url": "https://voltura.se/",
+    "image": "joakim",
+    "note": {
+      "sv": "De korta dagarna gör det lätt att uppskatta varje stund av dagsljus.",
+      "en": "Short days make every moment of daylight worth appreciating."
+    }
+  },
+  {
+    "day": 22,
+    "title": "Voltura Projects",
+    "description": {
+      "sv": "Bläddra bland Volturas appar, verktyg och öppna projekt.",
+      "en": "Browse Voltura’s apps, tools and open projects."
+    },
+    "url": "https://voltura-projects.volturaab.chatgpt.site/",
+    "image": "projects",
+    "note": {
+      "sv": "Låt en julmelodi följa med när du gör de sista förberedelserna.",
+      "en": "Put on a Christmas tune as you finish the last preparations."
+    }
+  },
+  {
+    "day": 23,
+    "title": "Voltura Air",
+    "description": {
+      "sv": "Använd mobilen som fjärrkontroll eller webbkamera till Windows.",
+      "en": "Use your phone as a remote or webcam for Windows."
+    },
+    "url": "https://air.voltura.se/",
+    "image": "air",
+    "video": "https://voltura.se/air/assets/voltura-air-demo.mp4",
+    "note": {
+      "sv": "Dan före dopparedan. Ikväll får det gärna dofta gran och pepparkakor.",
+      "en": "The night before Christmas Eve. Let the house smell of fir and gingerbread."
+    }
+  },
+  {
+    "day": 24,
+    "title": "Voltura Worlds",
+    "description": {
+      "sv": "Ta med det svenska vinterlandskapet till ditt Windows-skrivbord.",
+      "en": "Bring the Swedish winter landscape to your Windows desktop."
+    },
+    "url": "https://worlds.voltura.se/",
+    "image": "worlds",
+    "note": {
+      "sv": "God jul! Hoppas din julafton bjuder på värme och en stunds ro.",
+      "en": "Merry Christmas! May your Christmas Eve bring warmth and a little peace."
+    }
+  }
+]

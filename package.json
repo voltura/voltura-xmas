@@ -1,0 +1,10 @@
+{
+  "name": "voltura-julkalender",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "npm run build && node scripts/preview.mjs",
+    "test": "node --test"
+  }
+}

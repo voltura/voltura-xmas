@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="sv" data-light="night">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101c2b">
+  <meta name="description" content="24 luckor, 24 Voltura-projekt och en svensk jul i väntan på julafton.">
+  <title>Voltura Julkalender</title>
+  <link rel="icon" href="/assets/star.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/calendar.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Voltura Julkalender"><img src="/assets/star.svg" alt="" width="25" height="25"> VOLTURA</a>
+    <nav class="controls" aria-label="Inställningar">
+      <button id="light" type="button" aria-pressed="false"><span aria-hidden="true">☾</span> <span id="light-label">Natt</span></button>
+      <button id="music" type="button" aria-pressed="false"><span aria-hidden="true">♫</span> <span id="music-label">Musik av</span></button>
+      <button id="lang" type="button" lang="en" aria-label="Switch to English">EN</button>
+    </nav>
+  </header>
+  <main>
+    <section class="calendar" aria-labelledby="title">
+      <div class="picture" id="picture">
+        <div class="landscape" aria-hidden="true"></div>
+        <div class="daylight" aria-hidden="true"></div>
+        <div class="shade" aria-hidden="true"></div>
+        <canvas id="weather" aria-hidden="true"></canvas>
+        <div class="heading">
+          <p class="season" aria-hidden="true">✦ &nbsp; 1–24 <span id="month">DECEMBER</span> 2026 &nbsp; ✦</p>
+          <h1 id="title">Julkalender</h1>
+          <p id="countdown" class="countdown" aria-live="polite"></p>
+        </div>
+        <div class="doors" id="doors"></div>
+        <button class="bell" id="bell" type="button" aria-label="Julbjällra">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3h2l1 3c3 1 4 3 4 7l2 4v1H4v-1l2-4c0-4 1-6 4-7z" fill="#987752" stroke="#c7a373" stroke-width="1"/><path d="M10 19h4a2 2 0 0 1-4 0" fill="#a57a49"/></svg>
+        </button>
+      </div>
+    </section>
+    <div class="under-card">
+      <p id="day-note"></p>
+      <p id="feedback" role="status"></p>
+    </div>
+  </main>
+  <footer><span>Voltura AB</span><a id="cv" href="https://voltura.se/?lang=sv">Voltura / CV</a><a href="https://www.linkedin.com/in/joakim-voltura/">LinkedIn</a></footer>
+  <dialog id="reveal" aria-labelledby="reveal-title">
+    <button id="close" class="close" type="button" aria-label="Stäng">×</button>
+    <div class="reveal-inner">
+      <p id="reveal-date" class="reveal-date"></p>
+      <h2 id="reveal-title"></h2>
+      <div id="reveal-media"></div>
+      <p id="reveal-note"></p>
+      <p id="reveal-description"></p>
+      <a id="project-link" class="project-link" target="_blank" rel="noopener"></a>
+    </div>
+  </dialog>
+  <noscript>Aktivera JavaScript för att kunna öppna luckorna. Enable JavaScript to open the doors.</noscript>
+</body>
+</html>
