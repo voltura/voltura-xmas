@@ -8,7 +8,7 @@ const text = {
     door: n => 'Lucka ' + n, locked: n => 'Öppnas ' + n + ' december', ready: 'Redo att öppnas', shut: n => 'Stäng lucka ' + n,
     bell: 'Julbjällra', found: 'Du hittade den hemliga julbjällran! Nu kan du öppna alla 24 luckor.',
     relocked: 'Kommande luckor är stängda och låsta igen.',
-    error: 'Det gick inte att öppna just nu. Försök igen.', close: 'Stäng', skip: 'Hoppa över',
+    error: 'Det gick inte att öppna just nu. Försök igen.', close: 'Stäng',
     visit: 'Besök projektet', started: 'Startat', settings: 'Inställningar', switchLanguage: 'Switch to English', merry: 'God jul!',
     before: 'Första luckan öppnas den 1 december.',
     share: 'Dela julkalendern', shareLink: 'Länk till julkalendern', copy: 'Kopiera länk',
@@ -20,7 +20,7 @@ const text = {
     door: n => 'Door ' + n, locked: n => 'Opens December ' + n, ready: 'Ready to open', shut: n => 'Close door ' + n,
     bell: 'Christmas bell', found: 'You found the hidden Christmas bell! All 24 doors are now yours to open.',
     relocked: 'Future doors are closed and locked again.',
-    error: 'That could not be opened right now. Try again.', close: 'Close', skip: 'Skip',
+    error: 'That could not be opened right now. Try again.', close: 'Close',
     visit: 'Visit project', started: 'Started', settings: 'Settings', switchLanguage: 'Byt till svenska', merry: 'Merry Christmas!',
     before: 'The first door opens on December 1.',
     share: 'Share calendar', shareLink: 'Calendar link', copy: 'Copy link',
@@ -348,17 +348,12 @@ async function presentation(project, day) {
     }
   }
   video.src = videoUrl;
-  const skip = document.createElement('button');
-  skip.className = 'skip';
-  skip.type = 'button';
-  skip.textContent = word.skip;
-  skip.addEventListener('click', promo);
   video.addEventListener('error', promo, { once: true });
   video.addEventListener('ended', promo, { once: true });
   video.addEventListener('timeupdate', () => { if (video.currentTime >= 8) promo(); });
   $('reveal-description').hidden = true;
   $('project-link').hidden = true;
-  media.replaceChildren(video, skip);
+  media.replaceChildren(video);
   music.suspend();
   const timeout = setTimeout(promo, 11_000);
   stopClip = () => {
