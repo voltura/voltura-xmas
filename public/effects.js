@@ -105,16 +105,22 @@ export function weather(canvas, background, board) {
     context.fillRect(x - radius, y - radius, radius * 2, radius * 2);
   }
   function twinkleTree(mapX, cover, time) {
-    const interval = 1.4;
+    const interval = 1.65;
     const slot = Math.floor(time / interval);
-    const progress = (time - slot * interval) / .65;
+    const progress = (time - slot * interval) / .85;
     if (progress >= 1) return;
     // Step through the bulbs out of order, leaving a pause between brief twinkles.
     const [x, y, color] = bulbs[(slot * 7) % bulbs.length];
     const pulse = Math.sin(Math.PI * progress);
-    const radius = Math.max(1.7, cover * .0028);
-    glow(mapX(x), y * height, radius * 2, color, .48 * pulse);
-    glow(mapX(x), y * height, radius, '255,248,221', .92 * pulse);
+    const radius = Math.max(2.4, cover * .0038);
+    const centerX = mapX(x);
+    const centerY = y * height;
+    glow(centerX, centerY, radius * 2, color, .82 * pulse);
+    glow(centerX, centerY, radius * 1.35, '255,251,231', pulse);
+    context.fillStyle = 'rgba(255,253,241,' + .88 * pulse + ')';
+    context.beginPath();
+    context.arc(centerX, centerY, radius * .53, 0, Math.PI * 2);
+    context.fill();
   }
   function chimneySmoke(x, y, scale, time, daylight) {
     const color = daylight ? '247,238,220' : '201,217,239';
