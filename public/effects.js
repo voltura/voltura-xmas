@@ -101,12 +101,26 @@ export function weather(canvas, background, board) {
     context.fillRect(x - radius, y - radius, radius * 2, radius * 2);
   }
   function twinkleBulb(x, y, color, index, time, cover) {
-    const pulse = (.5 + .5 * Math.sin(time * (1.45 + index % 4 * .23) + index * 2.39)) ** 2;
-    const radius = Math.max(3, cover * .0042);
+    const pulse = (.5 + .5 * Math.sin(time * (2.35 + index % 4 * .37) + index * 2.39)) ** 2.5;
+    const radius = Math.max(3, cover * .0053);
     // The bulbs are printed in the artwork. Shade the painted core as the halo fades.
-    glow(x, y, radius * 1.55, '12,22,35', .67 * (1 - pulse));
-    glow(x, y, radius * 3.5, color, .86 * pulse);
-    glow(x, y, radius * 1.1, '255,248,221', .87 * pulse);
+    glow(x, y, radius * 1.8, '19,25,31', .89 * (1 - pulse));
+    glow(x, y, radius * 3.7, color, .94 * pulse);
+    glow(x, y, radius * 1.1, '255,248,221', .98 * pulse);
+    if (pulse > .84) glint(x, y, radius * 1.29, (pulse - .84) / .16 * .88);
+  }
+  function chimneySmoke(x, y, scale, time, daylight) {
+    const color = daylight ? '247,238,220' : '201,217,239';
+    for (let puff = 0; puff < 9; puff++) {
+      const age = (time / 9 + puff / 9) % 1;
+      const centerX = x + scale * (.04 * age + Math.sin(age * 8 - time * .58) * .007 * age);
+      const centerY = y - scale * (.08 * age + .014 * age ** 2);
+      const spread = scale * (.004 + age * .012);
+      const opacity = (daylight ? .32 : .25) * Math.sin(Math.PI * age) * (1 - age * .46);
+      glow(centerX, centerY, spread, color, opacity);
+      glow(centerX - spread * .52, centerY + spread * .37, spread * .72, color, opacity * .6);
+      glow(centerX + spread * .43, centerY - spread * .48, spread * .85, color, opacity * .54);
+    }
   }
   function glint(x, y, size, strength) {
     glow(x, y, size * 1.85, '255,230,166', strength * .65);
@@ -133,6 +147,7 @@ export function weather(canvas, background, board) {
       const cover = matchMedia('(max-width:700px)').matches ? Math.max(width, height * 1.777) : width;
       const offset = (width - cover) * .89;
       function mapX(x) { return x * cover + offset; }
+      chimneySmoke(mapX(.652), height * .327, Math.min(cover, height * 1.777), time, document.documentElement.dataset.light === 'day');
       for (const [i, [x, y, color]] of bulbs.entries()) {
         twinkleBulb(mapX(x), y * height, color, i, time, cover);
       }

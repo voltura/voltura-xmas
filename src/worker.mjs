@@ -7,7 +7,7 @@ const encoder = new TextEncoder();
 const tokenLifetime = 12 * 60 * 60 * 1000;
 const types = {
   html: 'text/html; charset=utf-8', css: 'text/css; charset=utf-8', js: 'text/javascript; charset=utf-8',
-  jpg: 'image/jpeg', webp: 'image/webp', woff2: 'font/woff2', svg: 'image/svg+xml', mp4: 'video/mp4',
+  jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp', woff2: 'font/woff2', svg: 'image/svg+xml', mp4: 'video/mp4',
 };
 const json = (data, status = 200) => Response.json(data, {
   status, headers: { 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff' },
