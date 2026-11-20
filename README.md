@@ -4,7 +4,7 @@ A Swedish Christmas calendar with 24 doors, each revealing a different Voltura p
 
 [Open the calendar](https://x-mas.voltura.se/) · [Svenska](https://x-mas.voltura.se/?language=sv) · [English](https://x-mas.voltura.se/?language=en)
 
-Share links accept `language=sv|en`, `night=on|off`, and `music=on|off`. The browser may require an interaction before starting music.
+Share links accept `language=sv|en`, `night=on|off|cycle`, and `music=on|off`. The lighting cycle fades from night to daylight over 15 minutes and back over the next 15 minutes. It pauses while the tab is hidden. The browser may require an interaction before starting music.
 
 ## Local development
 

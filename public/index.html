@@ -19,7 +19,11 @@
   <header class="site-header">
     <a class="brand" href="/" aria-label="Voltura Julkalender"><img src="/assets/voltura-logo.png" alt="" width="134" height="37"></a>
     <nav class="controls" aria-label="Inställningar">
-      <button id="light" type="button" aria-pressed="false"><span aria-hidden="true">☾</span> <span id="light-label">Natt</span></button>
+      <select id="light" aria-label="Ljusläge">
+        <option value="night">Natt</option>
+        <option value="day">Dag</option>
+        <option value="cycle">Dygn</option>
+      </select>
       <button id="music" type="button" aria-pressed="false"><span aria-hidden="true">♫</span> <span id="music-label">Musik av</span></button>
       <button id="lang" type="button" lang="en" aria-label="Switch to English">EN</button>
       <button class="share-button" id="share-header" type="button" aria-label="Dela julkalendern">

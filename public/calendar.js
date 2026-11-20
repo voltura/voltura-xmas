@@ -3,7 +3,7 @@ import { weather, christmasRadio, ringBell, scheduleTomte } from '/effects.js';
 const $ = id => document.getElementById(id);
 const text = {
   sv: {
-    title: 'Julkalender', month: 'december', night: 'Natt', day: 'Dag', music: 'Musik på', off: 'Musik av',
+    title: 'Julkalender', month: 'december', night: 'Natt', day: 'Dag', cycle: 'Dygn', lighting: 'Ljusläge', music: 'Musik på', off: 'Musik av',
     radioError: 'Julradion går inte att spela just nu. Försök igen.',
     countdown: n => n === 0 ? 'God jul!' : n === 1 ? '1 dag kvar till julafton' : n + ' dagar kvar till julafton',
     door: n => 'Lucka ' + n, locked: n => 'Öppnas ' + n + ' december', ready: 'Redo att öppnas', shut: n => 'Stäng lucka ' + n,
@@ -17,7 +17,7 @@ const text = {
     copied: 'Länken kopierades.', copyHelp: 'Markera och kopiera länken ovan.', email: 'E-post',
   },
   en: {
-    title: 'Christmas Calendar', month: 'December', night: 'Night', day: 'Day', music: 'Music on', off: 'Music off',
+    title: 'Christmas Calendar', month: 'December', night: 'Night', day: 'Day', cycle: 'Cycle', lighting: 'Lighting', music: 'Music on', off: 'Music off',
     radioError: 'Xmas radio is unavailable right now. Try again.',
     countdown: n => n === 0 ? 'Merry Christmas!' : n === 1 ? '1 day until Christmas Eve' : n + ' days until Christmas Eve',
     door: n => 'Door ' + n, locked: n => 'Opens December ' + n, ready: 'Ready to open', shut: n => 'Close door ' + n,
@@ -39,12 +39,14 @@ const positions = [
 ];
 const mobileOrder = [2, 13, 15, 9, 19, 7, 1, 11, 24, 3, 8, 6, 4, 23, 14, 12, 22, 10, 5, 16, 18, 20, 17, 21];
 const revealBorders = ['fir', 'woodcut', 'holly'];
+const lightOptions = new Map([['night', 'on'], ['day', 'off'], ['cycle', 'cycle']]);
+const halfCycle = 15 * 60 * 1000;
 const doors = new Map();
 const projectImages = new Map();
 const card = $('picture');
 const reveal = $('reveal');
 const doorTooltip = $('door-tooltip');
-const effects = weather($('weather'), $('background-snow'), card.closest('.calendar'));
+const effects = weather($('weather'), $('background-snow'), card.closest('.calendar'), () => daylight);
 const music = christmasRadio(() => {
   musicOn = false;
   removeMusicStartListeners();
@@ -67,8 +69,13 @@ let language = Object.hasOwn(text, requestedLanguage)
   ? requestedLanguage
   : read(local, key + 'language', 'sv') === 'en' ? 'en' : 'sv';
 const requestedNight = initialOptions.get('night');
-let light = requestedNight === 'on' ? 'night' : requestedNight === 'off' ? 'day' :
-  read(local, key + 'light', 'night') === 'day' ? 'day' : 'night';
+const savedLight = read(local, key + 'light', 'night');
+let light = [...lightOptions].find(([, option]) => option === requestedNight)?.[0]
+  ?? (lightOptions.has(savedLight) ? savedLight : 'night');
+let daylight = 0;
+let cycleElapsed = 0;
+let cycleResumedAt = null;
+let cycleTimer;
 let token = read(session, key + 'bell', '');
 let state = { available: 0, remaining: null, unlocked: false };
 const daySet = (store, name) => {
@@ -104,10 +111,8 @@ let musicOn = initialOptions.get('music') === 'on';
 let stopClip = () => {};
 let presentationRequest = null;
 let feedback = '';
-let lastDoor = null;
 let tooltipAnchor = null;
 let tooltipTimer;
-let touchPreview = null;
 let sharing = false;
 const t = () => text[language];
 const isAvailable = day => day <= state.available || state.unlocked;
@@ -124,6 +129,28 @@ function updateOption(option, value) {
   const url = new URL(location.href);
   url.searchParams.set(option, value);
   history.replaceState(history.state, '', url);
+}
+
+function updateDaylight() {
+  if (light === 'cycle') {
+    const elapsed = cycleElapsed + (cycleResumedAt === null ? 0 : performance.now() - cycleResumedAt);
+    const phase = elapsed % (2 * halfCycle);
+    const progress = Math.min(phase, 2 * halfCycle - phase) / halfCycle;
+    daylight = progress * progress * (3 - 2 * progress);
+  } else {
+    daylight = light === 'day' ? 1 : 0;
+  }
+  document.documentElement.style.setProperty('--daylight', daylight.toFixed(4));
+  document.documentElement.dataset.light = daylight >= .5 ? 'day' : 'night';
+}
+
+function syncDaylightCycle() {
+  clearInterval(cycleTimer);
+  const now = performance.now();
+  if (cycleResumedAt !== null) cycleElapsed += now - cycleResumedAt;
+  cycleResumedAt = light === 'cycle' && !document.hidden ? now : null;
+  updateDaylight();
+  if (cycleResumedAt !== null) cycleTimer = setInterval(updateDaylight, 1000);
 }
 
 function padlock(open) {
@@ -166,10 +193,10 @@ function setupDoors() {
     for (const [variable, value] of Object.entries({
       x, y, mx: mobileX, my: mobileY,
     })) door.style.setProperty('--' + variable, value / 100);
-    const image = document.createElement('a');
+    const image = document.createElement('button');
+    image.type = 'button';
     image.className = 'door-image';
-    image.target = '_blank';
-    image.rel = 'noopener';
+    image.setAttribute('aria-haspopup', 'dialog');
     image.hidden = true;
     image.addEventListener('pointerenter', event => {
       if (event.pointerType !== 'touch') showDoorTooltip(image, projectImages.get(day)?.title);
@@ -177,24 +204,13 @@ function setupDoors() {
     image.addEventListener('pointerleave', () => {
       if (document.activeElement !== image) hideDoorTooltip(image);
     });
-    let touched = false;
-    image.addEventListener('pointerdown', event => {
-      touched = event.pointerType === 'touch';
-    });
     image.addEventListener('focus', () => {
-      if (!touched) showDoorTooltip(image, projectImages.get(day)?.title);
+      if (image.matches(':focus-visible')) showDoorTooltip(image, projectImages.get(day)?.title);
     });
     image.addEventListener('blur', () => hideDoorTooltip(image));
-    image.addEventListener('click', event => {
-      if (touched && event.detail !== 0 && touchPreview !== image) {
-        event.preventDefault();
-        showDoorTooltip(image, projectImages.get(day)?.title);
-        touchPreview = image;
-      } else {
-        touchPreview = null;
-        hideDoorTooltip(image);
-      }
-      touched = false;
+    image.addEventListener('click', () => {
+      const project = projectImages.get(day);
+      if (!busy && !ringing && !reveal.open && isOpen(day) && project) showPostcard(project, day, image);
     });
     const button = document.createElement('button');
     button.type = 'button';
@@ -202,6 +218,13 @@ function setupDoors() {
     button.addEventListener('blur', () => hideDoorTooltip(button));
     const flap = document.createElement('span');
     flap.className = 'flap';
+    flap.setAttribute('aria-hidden', 'true');
+    flap.innerHTML = `<span class="flap-face flap-front"></span>
+      <span class="flap-face flap-back"></span>
+      <span class="flap-tip"><span class="flap-face flap-front"></span><span class="flap-face flap-back"></span>
+        <span class="flap-lock"></span></span>
+      <span class="flap-number">${day}</span>`;
+    const lock = flap.querySelector('.flap-lock');
     button.append(flap);
     function showCloseTooltip() {
       if (door.classList.contains('open')) showDoorTooltip(button, t().shut(day), flap);
@@ -219,14 +242,13 @@ function setupDoors() {
     });
     door.append(image, button);
     $('doors').append(door);
-    doors.set(day, { door, button, flap, image });
+    doors.set(day, { door, button, flap, lock, image });
   });
 }
 
 function render() {
   const word = t();
   document.documentElement.lang = language;
-  document.documentElement.dataset.light = light;
   document.title = 'Voltura ' + word.title;
   const brand = document.querySelector('.brand');
   brand.setAttribute('aria-label', document.title);
@@ -238,9 +260,10 @@ function render() {
   $('month').textContent = word.month.toUpperCase();
   $('countdown').textContent = state.remaining === null ? '' : word.countdown(state.remaining);
   $('day-note').textContent = state.note?.[language] ?? word.before;
-  $('light').setAttribute('aria-pressed', String(light === 'day'));
-  $('light').firstElementChild.textContent = light === 'day' ? '☀' : '☾';
-  $('light-label').textContent = light === 'day' ? word.day : word.night;
+  const lightSelect = $('light');
+  lightSelect.value = light;
+  lightSelect.setAttribute('aria-label', word.lighting);
+  for (const option of lightSelect.options) option.textContent = word[option.value];
   $('music').setAttribute('aria-pressed', String(musicOn));
   $('music-label').textContent = musicOn ? word.music : word.off;
   $('lang').textContent = language === 'sv' ? 'EN' : 'SV';
@@ -262,7 +285,7 @@ function render() {
   $('feedback').textContent = typeof feedback === 'number'
     ? (isAvailable(feedback) ? '' : waitLabel(feedback))
     : word[feedback] ?? '';
-  for (const [day, { door, button, flap, image }] of doors) {
+  for (const [day, { door, button, lock, image }] of doors) {
     const available = isAvailable(day);
     const project = projectImages.get(day);
     const visible = isOpen(day) && project;
@@ -273,19 +296,15 @@ function render() {
     }
     if (!door.classList.contains('closing')) door.classList.toggle('open', Boolean(visible));
     button.setAttribute('aria-label', visible ? word.shut(day) : word.door(day) + ', ' + (available ? word.ready : word.locked(day)));
-    if (flap.dataset.status !== String(available)) {
-      flap.dataset.status = String(available);
-      flap.innerHTML = '<span>' + day + '</span>' + padlock(available);
+    if (lock.dataset.status !== String(available)) {
+      lock.dataset.status = String(available);
+      lock.innerHTML = padlock(available);
     }
     if (!door.classList.contains('closing')) {
       image.hidden = !visible;
-      if (image.hidden) {
-        if (touchPreview === image) touchPreview = null;
-        hideDoorTooltip(image);
-      }
+      if (image.hidden) hideDoorTooltip(image);
     }
     if (visible) {
-      image.href = urlFor(project);
       image.setAttribute('aria-label', word.door(day) + ', ' + project.title);
       if (!image.firstElementChild) {
         const thumbnail = document.createElement('img');
@@ -356,13 +375,9 @@ async function presentation(project, day) {
     if (!stillShowing()) return;
     stopClip();
     media.replaceChildren(image);
-    $('reveal-description').hidden = false;
-    $('project-link').hidden = false;
   };
-  if (!project.video) {
-    promo();
-    return;
-  }
+  media.replaceChildren(image);
+  if (!project.video) return;
   const video = document.createElement('video');
   video.muted = true;
   video.playsInline = true;
@@ -370,9 +385,6 @@ async function presentation(project, day) {
   video.poster = project.thumbnail;
   let videoUrl = project.video;
   if (videoUrl.startsWith('/')) {
-    media.replaceChildren(image);
-    $('reveal-description').hidden = false;
-    $('project-link').hidden = false;
     try {
       const response = await fetch(videoUrl, { headers: auth(), signal: request.signal });
       if (!response.ok) throw new Error('Preview unavailable');
@@ -390,8 +402,6 @@ async function presentation(project, day) {
   video.addEventListener('error', promo, { once: true });
   video.addEventListener('ended', promo, { once: true });
   video.addEventListener('timeupdate', () => { if (video.currentTime >= 8) promo(); });
-  $('reveal-description').hidden = true;
-  $('project-link').hidden = true;
   media.replaceChildren(video);
   const timeout = setTimeout(promo, 11_000);
   stopClip = () => {
@@ -404,7 +414,7 @@ async function presentation(project, day) {
 }
 
 async function waitForFlap(flap) {
-  // Flush styles so the transition is present before reading its completion.
+  // Flush styles so the swing has started before reading its completion.
   void getComputedStyle(flap).transform;
   await Promise.allSettled(flap.getAnimations().map(animation => animation.finished));
 }
@@ -427,10 +437,25 @@ async function closeDoor(day) {
   busy = false;
 }
 
+function showPostcard(project, day, opener) {
+  active = { project, day, opener };
+  hideDoorTooltip();
+  const borders = revealBorders.filter(border => border !== reveal.dataset.border);
+  reveal.dataset.border = borders[Math.floor(Math.random() * borders.length)];
+  reveal.showModal();
+  void presentation(project, day);
+  reveal.scrollTop = 0;
+  reveal.animate([
+    { opacity: 0, transform: 'translateY(12px)' },
+    { opacity: 1, transform: 'translateY(0)' },
+  ], { duration: 230, easing: 'ease-out' });
+  $('close').focus({ preventScroll: true });
+}
+
 async function openDoor(day) {
-  if (busy || ringing || isOpen(day)) return;
+  if (busy || ringing || reveal.open || isOpen(day)) return;
+  const { door, flap, button } = doors.get(day);
   if (!isAvailable(day)) {
-    const { button } = doors.get(day);
     feedback = day;
     render();
     showDoorTooltip(button, waitLabel(day), button, 4200);
@@ -439,6 +464,7 @@ async function openDoor(day) {
   busy = true;
   try {
     const project = await loadProject(day);
+    if (!isAvailable(day)) return;
     const normal = day <= state.available;
     if (normal) setOpened(day, true);
     else {
@@ -446,30 +472,17 @@ async function openDoor(day) {
       save(session, key + 'early', [...early]);
     }
     feedback = '';
+    door.classList.add('opening');
     render();
-    const { flap, image } = doors.get(day);
-    lastDoor = image;
     await waitForFlap(flap);
     if (day === 24) effects.fireworks();
     if (day === 24) await new Promise(resolve => setTimeout(resolve, 1000));
-    active = { project, day };
-    const target = lastDoor.getBoundingClientRect();
-    hideDoorTooltip();
-    const borders = revealBorders.filter(border => border !== reveal.dataset.border);
-    reveal.dataset.border = borders[Math.floor(Math.random() * borders.length)];
-    reveal.showModal();
-    const box = reveal.getBoundingClientRect();
-    reveal.animate([
-      { opacity: .2, transform: 'translate(' + (target.left + target.width / 2 - box.left - box.width / 2) + 'px,' +
-        (target.top + target.height / 2 - box.top - box.height / 2) + 'px) scale(.12)' },
-      { opacity: 1, transform: 'none' },
-    ], { duration: 420, easing: 'cubic-bezier(.2,.75,.3,1)' });
-    void presentation(project, day);
-    $('close').focus();
+    if (isOpen(day)) showPostcard(project, day, button);
   } catch {
     feedback = 'error';
     render();
   } finally {
+    door.classList.remove('opening');
     busy = false;
   }
 }
@@ -519,11 +532,13 @@ $('bell').addEventListener('click', async () => {
     ringing = false;
   }
 });
-$('light').addEventListener('click', () => {
-  light = light === 'day' ? 'night' : 'day';
+$('light').addEventListener('change', event => {
+  light = event.currentTarget.value;
+  cycleElapsed = 0;
+  cycleResumedAt = null;
+  syncDaylightCycle();
   save(local, key + 'light', light);
-  updateOption('night', light === 'night' ? 'on' : 'off');
-  render();
+  updateOption('night', lightOptions.get(light));
 });
 const startRequestedMusic = event => {
   if (!musicOn || !event.isTrusted || event.key === 'Escape' || event.target.closest?.('#music')) return;
@@ -561,7 +576,7 @@ async function shareCalendar() {
   const url = new URL('https://x-mas.voltura.se/');
   url.search = new URLSearchParams({
     language,
-    night: light === 'night' ? 'on' : 'off',
+    night: lightOptions.get(light),
     music: musicOn ? 'on' : 'off',
   });
   const title = document.title;
@@ -600,11 +615,16 @@ reveal.addEventListener('close', () => {
   presentationRequest?.abort();
   presentationRequest = null;
   stopClip();
+  const closing = active;
   active = null;
   $('reveal-media').replaceChildren();
-  lastDoor?.focus();
+  if (closing) {
+    const opener = closing.opener.hidden ? doors.get(closing.day).button : closing.opener;
+    opener.focus({ preventScroll: true });
+  }
 });
 addEventListener('visibilitychange', () => {
+  if (light === 'cycle') syncDaylightCycle();
   if (!document.hidden) void refresh();
 });
 addEventListener('storage', event => {
@@ -616,18 +636,15 @@ addEventListener('storage', event => {
 addEventListener('scroll', () => hideDoorTooltip(), { passive: true });
 addEventListener('resize', () => hideDoorTooltip());
 document.addEventListener('pointerdown', event => {
-  if (touchPreview && !touchPreview.contains(event.target)) touchPreview = null;
   if (tooltipAnchor && !tooltipAnchor.contains(event.target)) hideDoorTooltip();
 }, true);
 addEventListener('keydown', event => {
-  if (event.key === 'Escape') {
-    touchPreview = null;
-    hideDoorTooltip();
-  }
+  if (event.key === 'Escape') hideDoorTooltip();
 });
 setupDoors();
 scheduleTomte($('tomte'));
 syncOpenedDoors();
+syncDaylightCycle();
 render();
 if (musicOn) {
   document.addEventListener('click', startRequestedMusic, true);

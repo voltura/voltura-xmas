@@ -1,4 +1,4 @@
-export function weather(canvas, background, board) {
+export function weather(canvas, background, board, daylightLevel) {
   const context = canvas.getContext('2d');
   const snow = background.getContext('2d');
   if (!context || !snow) return { spark() {}, fireworks() {} };
@@ -75,8 +75,9 @@ export function weather(canvas, background, board) {
     snow.stroke();
   }
 
-  function drawSnow(dt, time) {
-    const daylight = document.documentElement.dataset.light === 'day';
+  function drawSnow(dt, time, daylight) {
+    const shade = 179 - 41 * daylight;
+    const variation = 76 + 22 * daylight;
     for (const { x, y, width, height, flakes } of snowBands) {
       if (width < 4 || height < 12) continue;
       const count = Math.min(flakes.length, Math.max(4, Math.round(width * height / 1750)));
@@ -87,7 +88,7 @@ export function weather(canvas, background, board) {
         const px = x + ((flake.x + sway + 1) % 1) * width;
         const py = y + flake.y * height;
         snow.globalAlpha = flake.alpha;
-        const gray = (daylight ? 138 : 179) + Math.round(flake.tone * (daylight ? 98 : 76));
+        const gray = Math.round(shade + flake.tone * variation);
         snow.strokeStyle = 'rgb(' + gray + ',' + (gray + 2) + ',' + (gray + 5) + ')';
         snow.lineWidth = flake.radius < 2.5 ? 1.15 : 1.45;
         snow.lineCap = 'round';
@@ -123,13 +124,13 @@ export function weather(canvas, background, board) {
     context.fill();
   }
   function chimneySmoke(x, y, scale, time, daylight) {
-    const color = daylight ? '247,238,220' : '201,217,239';
+    const color = [201 + 46 * daylight, 217 + 21 * daylight, 239 - 19 * daylight].map(Math.round).join(',');
     for (let puff = 0; puff < 9; puff++) {
       const age = (time / 9 + puff / 9) % 1;
       const centerX = x + scale * (.04 * age + Math.sin(age * 8 - time * .58) * .007 * age);
       const centerY = y - scale * (.08 * age + .014 * age ** 2);
       const spread = scale * (.004 + age * .012);
-      const opacity = (daylight ? .32 : .25) * Math.sin(Math.PI * age) * (1 - age * .46);
+      const opacity = (.25 + .07 * daylight) * Math.sin(Math.PI * age) * (1 - age * .46);
       glow(centerX, centerY, spread, color, opacity);
       glow(centerX - spread * .52, centerY + spread * .37, spread * .72, color, opacity * .6);
       glow(centerX + spread * .43, centerY - spread * .48, spread * .85, color, opacity * .54);
@@ -157,10 +158,11 @@ export function weather(canvas, background, board) {
     context.clearRect(0, 0, width, height);
     snow.clearRect(0, 0, snowWidth, snowHeight);
     if (!document.hidden) {
+      const daylight = daylightLevel();
       const cover = matchMedia('(max-width:700px)').matches ? Math.max(width, height * 1.777) : width;
       const offset = (width - cover) * .89;
       function mapX(x) { return x * cover + offset; }
-      chimneySmoke(mapX(.652), height * .327, Math.min(cover, height * 1.777), time, document.documentElement.dataset.light === 'day');
+      chimneySmoke(mapX(.652), height * .327, Math.min(cover, height * 1.777), time, daylight);
       twinkleTree(mapX, cover, time);
       for (const [i, [x, y]] of snowGlints.entries()) {
         const strength = Math.pow(Math.max(0, Math.sin(time * (1.05 + i * .026) + i * 3.7)), 5);
@@ -173,7 +175,7 @@ export function weather(canvas, background, board) {
         const fade = 1 - p.age / p.life;
         glow(p.x + p.dx * p.age, p.y + p.dy * p.age + 35 * p.age ** 2, 2 + 3 * fade, p.color, fade);
       }
-      drawSnow(dt, time);
+      drawSnow(dt, time, daylight);
     }
     requestAnimationFrame(frame);
   }
