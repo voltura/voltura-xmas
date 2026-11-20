@@ -51,7 +51,7 @@ h1{font-size:clamp(1.6rem,5.3cqw,4.4rem);letter-spacing:-.053em;line-height:.93;
 .door{
   --left:var(--x);--top:var(--y);--door-width:7.1cqw;--tip-start:calc(.72 * var(--door-width));
   --paper-x:calc(var(--paper-offset) - var(--left) * 100cqw);--paper-y:calc(-1 * var(--top) * var(--paper-height));
-  --swing-time:600ms;--open-angle:-104deg;--open-shadow:translateX(-4px) scaleX(.52);
+  --swing-time:600ms;--close-time:500ms;--open-angle:-104deg;
   --perforation:#fff1d5aa;
   position:absolute;top:calc(var(--top) * 100%);left:calc(var(--left) * 100%);width:var(--door-width);height:12%;
   perspective:62cqw;perspective-origin:left center;
@@ -60,7 +60,7 @@ h1{font-size:clamp(1.6rem,5.3cqw,4.4rem);letter-spacing:-.053em;line-height:.93;
 .door-button,.door-image{border:0;padding:0;pointer-events:auto}
 .door-button{z-index:2;background:transparent;transform-style:preserve-3d}
 .door-image{overflow:hidden;background:#26344a}
-.door-image:focus-visible{outline-offset:-3px}
+.door-image:focus-visible{outline:2px solid #f4eadc;outline-offset:-2px}
 .door-image::after{content:"";position:absolute;inset:0;box-shadow:inset 3px 2px 5px #1c18176b;pointer-events:none}
 .door-image img{display:block;width:100%;height:100%;object-fit:cover}
 .door-tooltip{
@@ -117,18 +117,18 @@ h1{font-size:clamp(1.6rem,5.3cqw,4.4rem);letter-spacing:-.053em;line-height:.93;
 .door:is(.opening,.closing){z-index:2}
 .door.open .door-button{pointer-events:none}
 .door.open .flap{pointer-events:auto;transform:rotateY(var(--open-angle))}
-.door.open .door-button:focus-visible{outline:none}
-.door.open .door-button:focus-visible .flap-back{outline:3px solid #f0bb59;outline-offset:0}
+.door:is(.open,.closing) .door-button:focus-visible{outline:none}
+.door.open:not(.opening) .door-button:focus-visible .flap > .flap-back{outline:2px solid #654c34;outline-offset:-2px}
 .door.closing :is(.door-image,.door-button){pointer-events:none}
 .door::after{
   content:"";position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;
   background:linear-gradient(90deg,#1d130e,transparent 85%);filter:blur(2px);transform-origin:left center;
 }
-.door.open::after{opacity:.42;transform:var(--open-shadow)}
-.door:is(.opening.open,.closing) .flap{animation:paper-swing var(--swing-time) both}
-.door:is(.opening.open,.closing) .flap-tip{animation:paper-curl var(--swing-time) both}
-.door:is(.opening.open,.closing)::after{animation:paper-shadow var(--swing-time) both}
-.door.closing .flap,.door.closing .flap-tip,.door.closing::after{animation-direction:reverse}
+.door.opening.open .flap{animation:paper-swing var(--swing-time) both}
+.door.opening.open .flap-tip{animation:paper-curl var(--swing-time) both}
+.door.opening.open::after{animation:paper-shadow var(--swing-time) both}
+.door.closing .flap{animation:paper-close var(--close-time) cubic-bezier(.4,.02,.38,1) both}
+.door.closing .flap-tip{animation:paper-flatten var(--close-time) ease-in-out both}
 @keyframes paper-swing{
   0%,14%{transform:rotateY(0);animation-timing-function:cubic-bezier(.32,.06,.26,1)}
   79%{transform:rotateY(-109deg);animation-timing-function:ease-out}
@@ -143,7 +143,15 @@ h1{font-size:clamp(1.6rem,5.3cqw,4.4rem);letter-spacing:-.053em;line-height:.93;
 @keyframes paper-shadow{
   0%{opacity:0;transform:translateX(0) scaleX(.8)}
   29%{opacity:.68;transform:translateX(4px) scaleX(.92)}
-  100%{opacity:.42;transform:var(--open-shadow)}
+  100%{opacity:0;transform:translateX(-4px) scaleX(.52)}
+}
+@keyframes paper-close{
+  from{transform:rotateY(var(--open-angle))}
+  to{transform:rotateY(0)}
+}
+@keyframes paper-flatten{
+  0%,35%,100%{transform:rotateY(0)}
+  70%{transform:rotateY(-8deg)}
 }
 .bell{position:absolute;top:57%;left:58.3%;width:max(30px,3.7%);height:max(30px,5%);padding:0;border:0;background:transparent;z-index:1;display:grid;place-items:center}
 .bell svg{width:35%;min-width:9px;transform-origin:center top;filter:drop-shadow(0 1px 2px #2c1a10aa)}
